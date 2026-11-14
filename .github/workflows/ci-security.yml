@@ -20,6 +20,9 @@ jobs:
         with:
           fetch-depth: 0 # full history so every commit is scanned
       - name: Gitleaks
+        # Dependabot runs cannot read repo secrets (incl. GITLEAKS_LICENSE),
+        # so the scan is skipped here and still runs on push to main after merge.
+        if: github.actor != 'dependabot[bot]'
         uses: gitleaks/gitleaks-action@dcedce43c6f43de0b836d1fe38946645c9c638dc # v2
         env:
           GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
