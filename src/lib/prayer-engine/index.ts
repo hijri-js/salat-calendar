@@ -3,5 +3,5 @@
  * PR 1 (plan §10, PR 1). Replaced by the real engine in PR 3.
  */
 export function identityMinutes(minutes: number): number {
-	return minutes;
+  return minutes;
 }
