@@ -1,7 +1,8 @@
 /**
- * Placeholder so the 100% coverage gate for `prayer-engine` is exercised from
- * PR 1 (plan §10, PR 1). Replaced by the real engine in PR 3.
+ * The prayer engine: pure functions turning a year of prayer times plus user
+ * rules into calendar events and skips (plan §4.3, §7).
  */
-export function identityMinutes(minutes: number): number {
-  return minutes;
-}
+export * from "./types";
+export * from "./time";
+export * from "./titles";
+export * from "./scheduler";
