@@ -10,6 +10,11 @@ updates:
         update-types:
           - minor
           - patch
+    # Majors are handled deliberately, not by bot PR (engine lands in PR 3 first)
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
   - package-ecosystem: github-actions
     directory: /
     schedule:
