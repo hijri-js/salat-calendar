@@ -1,6 +1,6 @@
 # salat-calendar — agent instructions
 
-This repo is being built as **salat-calendar** (folder is still named `salaat-sync`; renaming is pending). It is a Next.js web app that turns a year of prayer times into real Google Calendar events or a downloadable `.ics` file. The full product plan, decisions, architecture, and PR-by-PR build order live in `docs/agents/PLAN.md` — read it before any implementation work. The plan is the source of truth; if code or instructions contradict it, surface the conflict instead of silently choosing.
+This repo is being built as **salat-calendar** (folder is still named `salaat-sync`; renaming is pending). It is a Next.js web app that turns a year of prayer times into real Google Calendar events or a downloadable `.ics` file. The full product plan, decisions, architecture, and PR-by-PR build order live in `docs/PLAN.md` — read it before any implementation work. The plan is the source of truth; if code or instructions contradict it, surface the conflict instead of silently choosing.
 
 ## Hard rules
 
