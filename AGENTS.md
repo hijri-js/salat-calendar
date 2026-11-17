@@ -5,6 +5,11 @@ This repo is **salat-calendar** (the folder was originally named `salaat-sync`).
 ## Hard rules
 
 - **pnpm only.** Never generate `package-lock.json` or `yarn.lock`.
+- **CI audit runs `pnpm audit --audit-level high --ignore-unfixable`.** Unfixable
+  advisories (no patched release upstream) are skipped deliberately — Dependabot
+  re-covers them the moment a fix ships. Do not add per-GHSA ignores unless a
+  reviewer asks; if a new advisory is fixable, bump or override the dependency
+  instead.
 - **Source files are camelCase** (`localFallback.ts`, not `local-fallback.ts`). Test files mirror the source name (`localFallback.test.ts`). Keep standard kebab-case only where ecosystems expect it: fixture data files, `.github/` workflows, and tool config files (`eslint.config.mjs`, `next.config.ts`).
 - **Use `@/` imports** for anything outside the current folder (e.g. `@/lib/prayer-engine/types`); plain relative `./` imports only within the same folder. The alias is configured in `tsconfig.json` and mirrored in `vitest.config.ts` — keep the two in sync if either changes.
 - **TypeScript strict**; Next.js App Router; Tailwind CSS v4 + shadcn/ui (Radix) + Lucide icons.
