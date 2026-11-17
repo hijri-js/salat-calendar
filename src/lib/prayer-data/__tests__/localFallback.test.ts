@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { computeLocalMonthTimings, supportedLocalMethods } from "../local-fallback";
+import { computeLocalMonthTimings, supportedLocalMethods } from "../localFallback";
 import type { DayTimings, Prayer } from "@/lib/prayer-engine/types";
 import { parseTime } from "@/lib/prayer-engine/time";
 

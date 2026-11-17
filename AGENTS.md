@@ -5,6 +5,7 @@ This repo is **salat-calendar** (the folder was originally named `salaat-sync`).
 ## Hard rules
 
 - **pnpm only.** Never generate `package-lock.json` or `yarn.lock`.
+- **Source files are camelCase** (`localFallback.ts`, not `local-fallback.ts`). Test files mirror the source name (`localFallback.test.ts`). Keep standard kebab-case only where ecosystems expect it: fixture data files, `.github/` workflows, and tool config files (`eslint.config.mjs`, `next.config.ts`).
 - **TypeScript strict**; Next.js App Router; Tailwind CSS v4 + shadcn/ui (Radix) + Lucide icons.
 - **i18n:** `next-intl`, routes `/en` and `/ar`, `dir="rtl"` for Arabic, numerals stay Latin, logical CSS properties (`ms-`, `pe-`).
 - **No database.** User rules live in browser memory; event ownership lives on the Google event tags.

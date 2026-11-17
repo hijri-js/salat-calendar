@@ -11,7 +11,7 @@
 import type { DayTimings } from "@/lib/prayer-engine/types";
 import { ApiError, fetchMonthRaw } from "./aladhan";
 import { cacheKey, TIMINGS_TTL_SECONDS, type TimingsCache } from "./cache";
-import { computeLocalMonthTimings } from "./local-fallback";
+import { computeLocalMonthTimings } from "./localFallback";
 import { normalizeMonth } from "./normalize";
 
 /** The .ics download needs a rolling year ≈ 13 partial calendar months. */
