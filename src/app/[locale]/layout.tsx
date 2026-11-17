@@ -6,6 +6,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { routing } from "@/i18n/routing";
 
+import Providers from "@/app/providers";
 import "../globals.css";
 
 // Geist for Latin text, Cairo covers Arabic (with a matching Latin set).
@@ -69,7 +70,9 @@ export default async function LocaleLayout({
 			className={`${geistSans.variable} ${geistMono.variable} ${cairo.variable} h-full antialiased`}
 		>
 			<body className="flex min-h-full flex-col">
-				<NextIntlClientProvider>{children}</NextIntlClientProvider>
+				<Providers>
+					<NextIntlClientProvider>{children}</NextIntlClientProvider>
+				</Providers>
 			</body>
 		</html>
 	);

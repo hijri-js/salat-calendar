@@ -23,19 +23,29 @@ function minToTime(min: number): string {
 	return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
-/** "08:00" → 480; keeps the old value when the field is emptied. */
+/** "08:00" → 480; keeps the old value when invalid, clamped to 0..1439. */
 function timeToMin(value: string, fallback: number): number {
 	const [h, m] = value.split(":").map(Number);
 	if (!Number.isFinite(h) || !Number.isFinite(m)) {
 		return fallback;
 	}
-	return h * 60 + m;
+	return Math.min(1439, Math.max(0, h * 60 + m));
 }
 
-/** Keeps NaN out of the store while a number field is being edited. */
-function toInt(value: number, fallback: number): number {
-	return Number.isFinite(value) ? value : fallback;
+/**
+ * Keeps NaN out of the store while a number field is being edited, and
+ * clamps finite values into a shared contract range (schema.ts).
+ */
+function toClamped(value: number, fallback: number, min: number, max: number): number {
+	if (!Number.isFinite(value)) {
+		return fallback;
+	}
+	return Math.min(max, Math.max(min, Math.round(value)));
 }
+
+/** Shared contract bounds (schema.ts): offset −180..180, duration 5..180. */
+const OFFSET_BOUNDS = { min: -180, max: 180 } as const;
+const DURATION_BOUNDS = { min: 5, max: 180 } as const;
 
 export default function StepTiming({ onBack, onNext }: StepTimingProps) {
 	const t = useTranslations("timing");
@@ -63,10 +73,13 @@ export default function StepTiming({ onBack, onNext }: StepTimingProps) {
 					{t("offsetLabel")}
 					<input
 						type="number"
+						min={OFFSET_BOUNDS.min}
+						max={OFFSET_BOUNDS.max}
+						step={1}
 						value={defaults.offsetMin}
 						onChange={(event) =>
 							updateDefaults({
-								offsetMin: toInt(event.target.valueAsNumber, defaults.offsetMin),
+								offsetMin: toClamped(event.target.valueAsNumber, defaults.offsetMin, OFFSET_BOUNDS.min, OFFSET_BOUNDS.max),
 							})
 						}
 						className="w-24 rounded-lg border border-black/15 px-2 py-1.5 dark:border-white/20"
@@ -76,10 +89,13 @@ export default function StepTiming({ onBack, onNext }: StepTimingProps) {
 					{t("durationLabel")}
 					<input
 						type="number"
+						min={DURATION_BOUNDS.min}
+						max={DURATION_BOUNDS.max}
+						step={1}
 						value={defaults.durationMin}
 						onChange={(event) =>
 							updateDefaults({
-								durationMin: toInt(event.target.valueAsNumber, defaults.durationMin),
+								durationMin: toClamped(event.target.valueAsNumber, defaults.durationMin, DURATION_BOUNDS.min, DURATION_BOUNDS.max),
 							})
 						}
 						className="w-24 rounded-lg border border-black/15 px-2 py-1.5 dark:border-white/20"
@@ -87,39 +103,22 @@ export default function StepTiming({ onBack, onNext }: StepTimingProps) {
 				</label>
 			</div>
 
-			<label className="flex items-center gap-2 text-sm">
-				<input
-					type="checkbox"
-					checked={rounding.grid !== "off"}
-					onChange={(event) =>
-						updateRounding({ grid: event.target.checked ? 5 : "off" })
-					}
-				/>
-				{t("roundingLabel")}
-			</label>
+			<fieldset className="flex flex-wrap items-center gap-4 text-sm">
+				<legend className="text-sm font-medium">{t("roundingLabel")}</legend>
+				{(["off", 5, 10] as const).map((grid) => (
+					<label key={String(grid)} className="flex items-center gap-1.5">
+						<input
+							type="radio"
+							name="rounding-grid"
+							checked={rounding.grid === grid}
+							onChange={() => updateRounding({ grid })}
+						/>
+						{grid === "off" ? t("gridOff") : grid === 5 ? t("grid5") : t("grid10")}
+					</label>
+				))}
+			</fieldset>
 			{rounding.grid !== "off" ? (
 				<div className="flex flex-col gap-2 ps-6">
-					<fieldset className="flex items-center gap-4 text-sm">
-						<legend className="sr-only">{t("gridLabel")}</legend>
-						<label className="flex items-center gap-1.5">
-							<input
-								type="radio"
-								name="rounding-grid"
-								checked={rounding.grid === 5}
-								onChange={() => updateRounding({ grid: 5 })}
-							/>
-							{t("grid5")}
-						</label>
-						<label className="flex items-center gap-1.5">
-							<input
-								type="radio"
-								name="rounding-grid"
-								checked={rounding.grid === 10}
-								onChange={() => updateRounding({ grid: 10 })}
-							/>
-							{t("grid10")}
-						</label>
-					</fieldset>
 					<fieldset className="flex items-center gap-4 text-sm">
 						<legend className="sr-only">{t("directionLabel")}</legend>
 						{(["nearest", "up", "down"] as const).map((direction) => (
@@ -179,6 +178,16 @@ export default function StepTiming({ onBack, onNext }: StepTimingProps) {
 					</label>
 				</div>
 			) : null}
+			{windowOn ? (
+				<p className="ps-6 text-xs opacity-60" aria-live="polite">
+					{startMin > endMin
+						? t("windowHintOvernight", {
+								from: minToTime(startMin),
+								to: minToTime(endMin),
+							})
+						: t("windowHint", { from: minToTime(startMin), to: minToTime(endMin) })}
+				</p>
+			) : null}
 
 			<h3 className="text-lg font-semibold">{t("jummahHeading")}</h3>
 			<fieldset className="flex flex-col gap-1.5 text-sm">
@@ -223,10 +232,13 @@ export default function StepTiming({ onBack, onNext }: StepTimingProps) {
 							<input
 								id="jummah-fixed-duration"
 								type="number"
+								min={DURATION_BOUNDS.min}
+								max={DURATION_BOUNDS.max}
+								step={1}
 								value={jummah.durationMin ?? 60}
 								onChange={(event) =>
 									updateJummah({
-										durationMin: toInt(event.target.valueAsNumber, 60),
+										durationMin: toClamped(event.target.valueAsNumber, 60, DURATION_BOUNDS.min, DURATION_BOUNDS.max),
 									})
 								}
 								className="w-20 rounded-lg border border-black/15 px-2 py-1 dark:border-white/20"
@@ -252,10 +264,13 @@ export default function StepTiming({ onBack, onNext }: StepTimingProps) {
 							<input
 								id="jummah-custom-offset"
 								type="number"
+								min={OFFSET_BOUNDS.min}
+								max={OFFSET_BOUNDS.max}
+								step={1}
 								value={jummah.offsetMin ?? 0}
 								onChange={(event) =>
 									updateJummah({
-										offsetMin: toInt(event.target.valueAsNumber, 0),
+										offsetMin: toClamped(event.target.valueAsNumber, 0, OFFSET_BOUNDS.min, OFFSET_BOUNDS.max),
 									})
 								}
 								className="w-20 rounded-lg border border-black/15 px-2 py-1 dark:border-white/20"
@@ -266,10 +281,13 @@ export default function StepTiming({ onBack, onNext }: StepTimingProps) {
 							<input
 								id="jummah-custom-duration"
 								type="number"
+								min={DURATION_BOUNDS.min}
+								max={DURATION_BOUNDS.max}
+								step={1}
 								value={jummah.durationMin ?? 45}
 								onChange={(event) =>
 									updateJummah({
-										durationMin: toInt(event.target.valueAsNumber, 45),
+										durationMin: toClamped(event.target.valueAsNumber, 45, DURATION_BOUNDS.min, DURATION_BOUNDS.max),
 									})
 								}
 								className="w-20 rounded-lg border border-black/15 px-2 py-1 dark:border-white/20"

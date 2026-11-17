@@ -12,6 +12,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.107.1",
     "adhan": "^4.4.6",
     "next": "16.4.6",
     "next-intl": "^4.15.1",

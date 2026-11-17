@@ -29,8 +29,6 @@
 		"heading": "أين أنت؟",
 		"cityLabel": "مدينتك",
 		"cityPlaceholder": "لندن، المملكة المتحدة",
-		"cityHint": "نص حر حاليًا — يأتي البحث الحقيقي عن المدن في الشريحة التالية. أضف «، خط العرض، خط الطول» لضبط الإحداثيات.",
-		"setCity": "ضبط المدينة",
 		"currentPlace": "المكان الحالي",
 		"notSet": "لم يُضبط بعد",
 		"coordinates": "الإحداثيات",
@@ -38,7 +36,21 @@
 		"methodLabel": "طريقة الحساب",
 		"schoolLabel": "مذهب العصر",
 		"schoolStandard": "الجمهور (شافعي)",
-		"schoolHanafi": "حنفي"
+		"schoolHanafi": "حنفي",
+		"searchHint": "اكتب حرفين على الأقل للبحث عن مدينة.",
+		"searching": "جارٍ البحث…",
+		"searchNoResults": "لا توجد نتائج مطابقة",
+		"searchError": "فشل البحث — حاول مرة أخرى.",
+		"cityResults": "اقتراحات المدن",
+		"gpsButton": "استخدم موقعي",
+		"gpsLocating": "جارٍ تحديد موقعك…",
+		"gpsErrorPermission": "تم رفض إذن الموقع — اسمح به في المتصفح أو اختر مدينة يدويًا.",
+		"gpsErrorUnavailable": "موقعك غير متاح على هذا الجهاز.",
+		"gpsErrorTimeout": "استغرق تحديد موقعك وقتًا طويلاً — حاول مرة أخرى.",
+		"gpsErrorGeneric": "تعذّر تحديد موقعك — اختر مدينة يدويًا.",
+		"myLocation": "موقعي",
+		"gpsTimezoneHint": "تم تحديد موقعك عبر جهازك — تُستخدم المنطقة الزمنية للجهاز.",
+		"suggestedFor": "مقترح لـ {country}"
 	},
 	"prayers": {
 		"heading": "أي الصلوات؟",
@@ -64,7 +76,14 @@
 		"presetsLabel": "اختصارات",
 		"presetAll": "الكل",
 		"presetSunThu": "الأحد–الخميس",
-		"presetMonFri": "الاثنين–الجمعة"
+		"presetMonFri": "الاثنين–الجمعة",
+		"customise": "تخصيص",
+		"offsetLabel": "الإزاحة (دقيقة)",
+		"durationLabel": "المدة (دقيقة)",
+		"emojiLabel": "الرمز",
+		"titleLabel": "عنوان مخصص",
+		"titlePlaceholder": "مثال: الظهر",
+		"transparencyLabel": "مشغول أم متفرغ لـ {prayer}"
 	},
 	"timing": {
 		"heading": "الافتراضي لكل الصلوات",
@@ -89,7 +108,9 @@
 		"none": "بلا موعد للجمعة",
 		"fixedTimeLabel": "الوقت الثابت",
 		"jummahOffsetLabel": "البداية بعد الأذان (دقيقة)",
-		"jummahDurationLabel": "المدة (دقيقة)"
+		"jummahDurationLabel": "المدة (دقيقة)",
+		"windowHint": "الصلوات التي تبدأ خارج {from}–{to} تُتخطى.",
+		"windowHintOvernight": "النافذة تعبر منتصف الليل ({from}–{to}): تُتخطى الصلوات التي تبدأ قبل {to} أو بعد {from}."
 	},
 	"calendar": {
 		"heading": "التقويم",
@@ -111,11 +132,34 @@
 		"keywordPlaceholder": "أضف كلمة مفتاحية",
 		"addKeyword": "إضافة",
 		"removeKeyword": "إزالة الكلمة المفتاحية {keyword}",
-		"replaceLabel": "استبدال فعاليات المزامنات السابقة"
+		"replaceLabel": "استبدال فعاليات المزامنات السابقة",
+		"reminderMinutes": "قبل {countLatin} دقيقة"
 	},
 	"preview": {
 		"heading": "أيامك السبعة القادمة",
-		"placeholder": "تأتي شبكة الأسبوع عند توصيل المعاينة في الشريحة التالية."
+		"placeholder": "تأتي شبكة الأسبوع عند توصيل المعاينة في الشريحة التالية.",
+		"noCity": "اختر مدينتك أولًا — ستظهر المعاينة هنا.",
+		"previousWeek": "الأسبوع السابق",
+		"nextWeek": "الأسبوع التالي",
+		"loading": "جارٍ تحميل الأسبوع…",
+		"loadingWeek": "جارٍ تحميل الأسبوع…",
+		"loadError": "تعذّر تحميل مواقيت الصلاة — حاول مرة أخرى.",
+		"skipReason": {
+			"prayer-off": "الصلاة مُطفأة",
+			"day-off": "اليوم مُطفأ",
+			"jummah-off": "بلا موعد للجمعة",
+			"outside-window": "خارج النافذة",
+			"ooo": "غائب"
+		},
+		"skipped": "مُتخطى: {reason}",
+		"skippedShort": "مُتخطى",
+		"windowStarts": "تبدأ النافذة {time}",
+		"windowEnds": "تنتهي النافذة {time}",
+		"legendBusy": "مشغول",
+		"legendFree": "متفرغ",
+		"legendSkipped": "مُتخطى (مرر لمعرفة السبب)",
+		"eventsWeek": "{count, plural, =0 {لا فعاليات هذا الأسبوع} one {فعالية واحدة هذا الأسبوع} two {فعاليتان هذا الأسبوع} few {{countLatin} فعاليات هذا الأسبوع} many {{countLatin} فعالية هذا الأسبوع} other {{countLatin} فعالية هذا الأسبوع}}",
+		"yearEstimate": "نحو {countLatin} للعام"
 	},
 	"miniPreview": {
 		"heading": "اليوم في {city}",

@@ -1,16 +1,17 @@
 "use client";
 
 /**
- * Step 4: Calendar (plan §6). Title language, Google target, the
- * out-of-office skip rule with its keyword chips, and "replace earlier
- * syncs". Colour and reminder are rendered as labelled placeholders until
- * the sync slice wires them.
+ * Step 4: Calendar (plan §6). Title language, event colour from the Google
+ * `colorId` palette, reminder, Google target, the out-of-office skip rule
+ * with its keyword chips, and "replace earlier syncs" — all bound to the
+ * config store.
  */
 import { useState, type FormEvent } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { useWizardConfig } from "@/features/wizard";
 
+import { GOOGLE_COLORS } from "./colors";
 import NavButtons from "./navButtons";
 
 interface StepCalendarProps {
@@ -18,8 +19,12 @@ interface StepCalendarProps {
 	onNext?: () => void;
 }
 
+/** Reminder choices in minutes before the event (0 = none). */
+const REMINDER_CHOICES = [5, 10, 15, 30] as const;
+
 export default function StepCalendar({ onBack, onNext }: StepCalendarProps) {
 	const t = useTranslations("calendar");
+	const locale = useLocale();
 	const config = useWizardConfig((s) => s.config);
 	const setTitleLocale = useWizardConfig((s) => s.setTitleLocale);
 	const setTarget = useWizardConfig((s) => s.setTarget);
@@ -84,6 +89,11 @@ export default function StepCalendar({ onBack, onNext }: StepCalendarProps) {
 						className="rounded-lg border border-black/15 px-2 py-1.5 dark:border-white/20"
 					>
 						<option value="">{t("colourDefault")}</option>
+						{GOOGLE_COLORS.map((color) => (
+							<option key={color.id} value={color.id}>
+								{locale === "ar" ? color.ar : color.en}
+							</option>
+						))}
 					</select>
 				</label>
 				<label className="flex flex-col gap-1 text-sm">
@@ -98,6 +108,11 @@ export default function StepCalendar({ onBack, onNext }: StepCalendarProps) {
 						className="rounded-lg border border-black/15 px-2 py-1.5 dark:border-white/20"
 					>
 						<option value={0}>{t("reminderNone")}</option>
+						{REMINDER_CHOICES.map((minutes) => (
+							<option key={minutes} value={minutes}>
+								{t("reminderMinutes", { count: minutes, countLatin: String(minutes) })}
+							</option>
+						))}
 					</select>
 				</label>
 			</div>
