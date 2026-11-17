@@ -85,6 +85,9 @@ export const syncConfigSchema = z.object({
 	location: z.object({
 		latitude: z.number().min(-90).max(90),
 		longitude: z.number().min(-180).max(180),
+		// Present once a place is chosen (engine types gained these in PR 5a).
+		timezone: z.string().optional(),
+		label: z.string().optional(),
 	}),
 	method: z.number().int().min(1).max(30),
 	school: z.enum(["standard", "hanafi"]),

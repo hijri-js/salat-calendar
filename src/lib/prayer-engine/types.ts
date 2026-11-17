@@ -25,6 +25,10 @@ export type TitleLocale = "en" | "ar";
 export interface Location {
 	latitude: number;
 	longitude: number;
+	/** IANA timezone of the place, from geocoding. Empty until a place is set. */
+	timezone?: string;
+	/** Human-readable city label, from geocoding. Empty until a place is set. */
+	label?: string;
 }
 
 /** Per-prayer rule; `undefined` fields fall back to `RuleDefaults`. */

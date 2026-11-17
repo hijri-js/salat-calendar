@@ -1,0 +1,158 @@
+{
+	"app": {
+		"name": "salat-calendar",
+		"title": "salat-calendar — مواقيت الصلاة في تقويمك",
+		"description": "حوّل سنة كاملة من مواقيت الصلاة إلى فعاليات حقيقية في تقويم Google أو إلى ملف .ics جاهز للتنزيل."
+	},
+	"common": {
+		"back": "السابق",
+		"next": "التالي"
+	},
+	"header": {
+		"github": "GitHub"
+	},
+	"stepper": {
+		"label": "خطوات المعالج",
+		"steps": {
+			"place": "المكان",
+			"prayers": "الصلوات",
+			"timing": "التوقيت",
+			"calendar": "التقويم",
+			"preview": "المعاينة",
+			"getIt": "احصل عليه"
+		}
+	},
+	"validity": {
+		"pickACity": "اختر مدينة"
+	},
+	"place": {
+		"heading": "أين أنت؟",
+		"cityLabel": "مدينتك",
+		"cityPlaceholder": "لندن، المملكة المتحدة",
+		"cityHint": "نص حر حاليًا — يأتي البحث الحقيقي عن المدن في الشريحة التالية. أضف «، خط العرض، خط الطول» لضبط الإحداثيات.",
+		"setCity": "ضبط المدينة",
+		"currentPlace": "المكان الحالي",
+		"notSet": "لم يُضبط بعد",
+		"coordinates": "الإحداثيات",
+		"timezoneLabel": "المنطقة الزمنية",
+		"methodLabel": "طريقة الحساب",
+		"schoolLabel": "مذهب العصر",
+		"schoolStandard": "الجمهور (شافعي)",
+		"schoolHanafi": "حنفي"
+	},
+	"prayers": {
+		"heading": "أي الصلوات؟",
+		"prayer": {
+			"fajr": "الفجر",
+			"dhuhr": "الظهر",
+			"asr": "العصر",
+			"maghrib": "المغرب",
+			"isha": "العشاء"
+		},
+		"daysHeading": "أي الأيام؟",
+		"busy": "مشغول",
+		"free": "متفرغ",
+		"days": {
+			"0": "الأحد",
+			"1": "الاثنين",
+			"2": "الثلاثاء",
+			"3": "الأربعاء",
+			"4": "الخميس",
+			"5": "الجمعة",
+			"6": "السبت"
+		},
+		"presetsLabel": "اختصارات",
+		"presetAll": "الكل",
+		"presetSunThu": "الأحد–الخميس",
+		"presetMonFri": "الاثنين–الجمعة"
+	},
+	"timing": {
+		"heading": "الافتراضي لكل الصلوات",
+		"offsetLabel": "البداية بعد الأذان (دقيقة)",
+		"durationLabel": "مدة الفعالية (دقيقة)",
+		"roundingLabel": "محاذاة البداية إلى الشبكة",
+		"gridLabel": "الشبكة",
+		"gridOff": "بلا",
+		"grid5": "5 دقائق",
+		"grid10": "10 دقائق",
+		"directionLabel": "الاتجاه",
+		"nearest": "الأقرب",
+		"up": "لأعلى",
+		"down": "لأسفل",
+		"windowLabel": "الحجز ضمن هذه الساعات فقط",
+		"windowFrom": "من",
+		"windowTo": "إلى",
+		"jummahHeading": "الجمعة (الجُمعة)",
+		"same": "مثل الظهر",
+		"fixed": "وقت ثابت",
+		"custom": "مخصص",
+		"none": "بلا موعد للجمعة",
+		"fixedTimeLabel": "الوقت الثابت",
+		"jummahOffsetLabel": "البداية بعد الأذان (دقيقة)",
+		"jummahDurationLabel": "المدة (دقيقة)"
+	},
+	"calendar": {
+		"heading": "التقويم",
+		"titleLocaleLabel": "لغة عناوين الفعاليات",
+		"titleLocaleEn": "الإنجليزية",
+		"titleLocaleAr": "العربية",
+		"colourLabel": "اللون",
+		"colourDefault": "الافتراضي",
+		"reminderLabel": "التنبيه",
+		"reminderNone": "بلا",
+		"googleHeading": "لمزامنة Google",
+		"targetLabel": "الكتابة في",
+		"targetDedicated": "تقويم «Salat» منفصل",
+		"recommended": "موصى به",
+		"targetPrimary": "تقويمي الأساسي",
+		"extraPermission": "إذن إضافي واحد",
+		"oooLabel": "تخطَّ الأيام التي أكون فيها غائبًا",
+		"oooHint": "فعاليات «خارج المكتب» والفعاليات التي يحتوي عنوانها على:",
+		"keywordPlaceholder": "أضف كلمة مفتاحية",
+		"addKeyword": "إضافة",
+		"removeKeyword": "إزالة الكلمة المفتاحية {keyword}",
+		"replaceLabel": "استبدال فعاليات المزامنات السابقة"
+	},
+	"preview": {
+		"heading": "أيامك السبعة القادمة",
+		"placeholder": "تأتي شبكة الأسبوع عند توصيل المعاينة في الشريحة التالية."
+	},
+	"miniPreview": {
+		"heading": "اليوم في {city}",
+		"headingNoCity": "اليوم",
+		"eventsToday": "{count, plural, =0 {لا فعاليات} one {فعالية واحدة} two {فعاليتان} few {{countLatin} فعاليات} many {{countLatin} فعالية} other {{countLatin} فعالية}}",
+		"timezoneLabel": "المنطقة الزمنية",
+		"placeholder": "تأتي المعاينة الحية في الشريحة التالية."
+	},
+	"getIt": {
+		"heading": "احصل عليه",
+		"syncHeading": "المزامنة مع تقويم Google",
+		"syncBody": "فعاليات حية، وتخطٍّ لأيام الغياب، وإزالة بنقرة واحدة.",
+		"connectButton": "اربط Google وابدأ المزامنة",
+		"icsHeading": "تنزيل ملف (.ics)",
+		"icsBody": "يعمل في Outlook وApple. لقطة لسنة واحدة؛ بلا تخطٍّ لأيام الغياب.",
+		"downloadButton": "تنزيل",
+		"pickACityFirst": "اختر مدينتك أولًا"
+	},
+	"methods": {
+		"1": "جامعة العلوم الإسلامية، كراتشي",
+		"2": "الجمعية الإسلامية لأمريكا الشمالية",
+		"3": "رابطة العالم الإسلامي",
+		"4": "أم القرى، مكة المكرمة",
+		"5": "الهيئة المصرية العامة للمساحة",
+		"7": "معهد الجيوفيزياء، جامعة طهران",
+		"8": "منطقة الخليج",
+		"9": "الكويت",
+		"10": "قطر",
+		"11": "مجلس الشؤون الإسلامية، سنغافورة",
+		"12": "منظمة الاتحاد الإسلامي بفرنسا",
+		"13": "رئاسة الشؤون الدينية، تركيا",
+		"14": "الإدارة الروحية لمسلمي روسيا",
+		"15": "لجنة رؤية الهلال العالمية",
+		"16": "دبي (الإمارات)"
+	},
+	"notFound": {
+		"title": "الصفحة غير موجودة",
+		"body": "الصفحة التي تبحث عنها غير موجودة."
+	}
+}
