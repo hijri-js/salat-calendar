@@ -58,7 +58,7 @@ describe("foldLine", () => {
 		expect(folded.split("\r\n ").join("")).toBe(line);
 	});
 
-	it("never splits a multi-byte character (2-byte Arabic at the boundary)", () => {
+	it("never splits a multi-byte character (3-byte em dash at the boundary)", () => {
 		// 73 "a" (73 octets) + a 3-byte dash would exceed 75, so the dash must
 		// start the continuation line rather than being split.
 		const line = "a".repeat(73) + "—" + "b".repeat(10);
@@ -116,6 +116,19 @@ describe("toUtc", () => {
 		);
 	});
 
+	it("is correct on the DST transition days themselves (the two-pass case)", () => {
+		// Fall-back day in New York (2026-11-01): a single offset pass would
+		// answer 06:30Z; the second pass corrects to the true instant.
+		expect(toUtc("2026-11-01T02:30", "America/New_York")).toBe(
+			Date.parse("2026-11-01T07:30:00Z"),
+		);
+		// Spring-forward day in London (2026-03-29): 02:30 does not exist.
+		// The result is deterministic; pin it so refactors cannot change it silently.
+		expect(toUtc("2026-03-29T02:30", "Europe/London")).toBe(
+			Date.parse("2026-03-29T01:30:00Z"),
+		);
+	});
+
 	it("lands midnight-crossing dates on the right UTC day", () => {
 		// Maghrib 23:45 BST ends 00:30 BST next day — both are Jun 15 UTC.
 		expect(toUtc("2026-06-15T23:45", "Europe/London")).toBe(
@@ -152,7 +165,7 @@ describe("buildIcs", () => {
 
 	it("includes a VALARM only when reminderMin is present", () => {
 		const withReminder = buildIcs([londonEvent({ reminderMin: 15 })], { now });
-		expect(withReminder).toContain("BEGIN:VALARM\r\nACTION:DISPLAY\r\nTRIGGER:-PT15M\r\nEND:VALARM\r\n");
+		expect(withReminder).toContain("BEGIN:VALARM\r\nACTION:DISPLAY\r\nDESCRIPTION:Isha\r\nTRIGGER:-PT15M\r\nEND:VALARM\r\n");
 		const withZeroReminder = buildIcs([londonEvent({ reminderMin: 0 })], { now });
 		expect(withZeroReminder).toContain("TRIGGER:-PT0M\r\n");
 		const without = buildIcs([londonEvent()], { now });
@@ -198,6 +211,7 @@ describe("buildIcs", () => {
 			"TRANSP:OPAQUE",
 			"BEGIN:VALARM",
 			"ACTION:DISPLAY",
+			"DESCRIPTION:Isha — Salat",
 			"TRIGGER:-PT15M",
 			"END:VALARM",
 			"END:VEVENT",

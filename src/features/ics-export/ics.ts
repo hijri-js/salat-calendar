@@ -74,7 +74,8 @@ export function foldLine(line: string, limit = 75): string {
 	return segments.join("\r\n ");
 }
 
-/** Cached `DateTimeFormat` per timezone; Intl formatters are expensive. */
+/** Cached `DateTimeFormat` per timezone; Intl formatters are expensive.
+ * Bounded in practice: the map grows by one entry per distinct zone used. */
 const formatters = new Map<string, Intl.DateTimeFormat>();
 
 function formatterFor(timeZone: string): Intl.DateTimeFormat {
@@ -125,6 +126,10 @@ export function zoneOffset(instant: number, timeZone: string): number {
  * `PlannedEvent` start/end format) in the given IANA timezone to a UTC
  * instant in ms. Correct across DST boundaries: the offset is looked up
  * with Intl and the fixed point is found in two passes.
+ *
+ * Wall-clock times inside a DST gap (they do not exist) and ambiguous
+ * fall-back times resolve to a deterministic but arbitrary instant; for
+ * prayer times the gap hour is practically unreachable. Pinned by test.
  */
 export function toUtc(localIso: string, timeZone: string): number {
 	if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(localIso)) {
@@ -132,7 +137,9 @@ export function toUtc(localIso: string, timeZone: string): number {
 	}
 	// Interpret the wall clock as if it were UTC, then subtract the zone
 	// offset at that instant; repeat once so the offset is read at (or near)
-	// the true instant, which keeps dates on DST-change days correct.
+	// the true instant, which keeps dates on DST-change days correct. Two
+	// passes suffice: a third pass would only differ if two zone transitions
+	// fell within the same hour, which no modern IANA zone has.
 	const pseudoUtc = Date.parse(`${localIso}:00Z`);
 	const instant = pseudoUtc - zoneOffset(pseudoUtc, timeZone);
 	return pseudoUtc - zoneOffset(instant, timeZone);
@@ -158,6 +165,8 @@ function eventLines(event: PlannedEvent, now: Date): string[] {
 		lines.push(
 			"BEGIN:VALARM",
 			"ACTION:DISPLAY",
+			// RFC 5545 §3.6.6: DESCRIPTION is REQUIRED for ACTION:DISPLAY.
+			`DESCRIPTION:${escapeText(event.title)}`,
 			`TRIGGER:-PT${event.reminderMin}M`,
 			"END:VALARM",
 		);
