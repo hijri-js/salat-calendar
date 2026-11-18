@@ -59,8 +59,13 @@ export interface WizardState {
 	config: SyncConfig;
 	/** True once the user picked the title language themselves. */
 	titleLocaleChosen: boolean;
+	/** True once the user picked a calculation method by hand. */
+	methodChosen: boolean;
 	setLocation: (location: Partial<Location>) => void;
+	/** The user's own pick; from then on a city pick no longer changes it. */
 	setMethod: (method: number) => void;
+	/** A city's suggested method, applied only if the user has not chosen one. */
+	suggestMethod: (method: number) => void;
 	setSchool: (school: AsrSchool) => void;
 	updatePrayer: (prayer: Prayer, patch: Partial<PrayerRule>) => void;
 	setDays: (days: Weekday[]) => void;
@@ -84,11 +89,18 @@ export interface WizardState {
 export const useWizardConfig = create<WizardState>()((set) => ({
 	config: defaultConfig,
 	titleLocaleChosen: false,
+	methodChosen: false,
 	setLocation: (location) =>
 		set(({ config }) => ({
 			config: { ...config, location: { ...config.location, ...location } },
 		})),
-	setMethod: (method) => set(({ config }) => ({ config: { ...config, method } })),
+	setMethod: (method) => set(({ config }) => ({ config: { ...config, method }, methodChosen: true })),
+	suggestMethod: (method) =>
+		set((state) =>
+			state.methodChosen || state.config.method === method
+				? state
+				: { config: { ...state.config, method } },
+		),
 	setSchool: (school) => set(({ config }) => ({ config: { ...config, school } })),
 	updatePrayer: (prayer, patch) =>
 		set(({ config }) => ({
@@ -147,7 +159,7 @@ export const useWizardConfig = create<WizardState>()((set) => ({
 	setTarget: (target) => set(({ config }) => ({ config: { ...config, target } })),
 	setReplaceExisting: (replaceExisting) =>
 		set(({ config }) => ({ config: { ...config, replaceExisting } })),
-	reset: () => set({ config: defaultConfig, titleLocaleChosen: false }),
+	reset: () => set({ config: defaultConfig, titleLocaleChosen: false, methodChosen: false }),
 }));
 
 /**

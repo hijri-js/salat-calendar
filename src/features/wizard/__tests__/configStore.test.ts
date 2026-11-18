@@ -10,7 +10,7 @@ import {
 const store = () => useWizardConfig.getState();
 
 beforeEach(() => {
-	useWizardConfig.setState({ config: defaultConfig, titleLocaleChosen: false });
+	useWizardConfig.setState({ config: defaultConfig, titleLocaleChosen: false, methodChosen: false });
 });
 
 describe("defaults (plan §2/§6)", () => {
@@ -175,6 +175,19 @@ describe("actions", () => {
 		store().adoptUiLocale("ar");
 		expect(store().config.titleLocale).toBe("en");
 		expect(store().titleLocaleChosen).toBe(true);
+	});
+
+	it("a city's suggested method applies until the user picks one, across re-picks", () => {
+		store().suggestMethod(4); // Saudi Arabia → Umm al-Qura
+		expect(store().config.method).toBe(4);
+
+		store().setMethod(2); // user chooses ISNA by hand
+		store().suggestMethod(5); // a later city pick (e.g. after leaving the step)
+		expect(store().config.method).toBe(2);
+		expect(store().methodChosen).toBe(true);
+
+		store().reset();
+		expect(store().methodChosen).toBe(false);
 	});
 
 	it("reset returns to the defaults", () => {
