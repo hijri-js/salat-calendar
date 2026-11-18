@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import { Cairo, Geist, Geist_Mono } from "next/font/google";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
@@ -25,29 +24,16 @@ const cairo = Cairo({
 	subsets: ["arabic", "latin"],
 });
 
+/**
+ * The root layout must read the locale for <html lang dir>, so it cannot be
+ * part of a shared instant shell. Each locale is still prerendered from
+ * generateStaticParams; only the dev-time instant-navigation check is opted
+ * out here (switching language is a full navigation anyway).
+ */
+export const instant = false;
+
 export function generateStaticParams() {
 	return routing.locales.map((locale) => ({ locale }));
-}
-
-export async function generateMetadata({
-	params,
-}: {
-	params: Promise<{ locale: string }>;
-}): Promise<Metadata> {
-	const { locale } = await params;
-	const t = await getTranslations({ locale, namespace: "app" });
-
-	return {
-		title: t("title"),
-		description: t("description"),
-		alternates: {
-			canonical: `/${locale}`,
-			languages: {
-				en: "/en",
-				ar: "/ar",
-			},
-		},
-	};
 }
 
 export default async function LocaleLayout({
@@ -62,6 +48,7 @@ export default async function LocaleLayout({
 		notFound();
 	}
 	setRequestLocale(locale);
+	const t = await getTranslations({ locale, namespace: "app" });
 
 	return (
 		<html
@@ -70,6 +57,17 @@ export default async function LocaleLayout({
 			className={`${geistSans.variable} ${geistMono.variable} ${cairo.variable} h-full antialiased`}
 		>
 			<body className="flex min-h-full flex-col">
+				{/*
+				  Per-locale metadata as elements; React hoists them into <head>.
+				  A generateMetadata() that reads params is flagged by Partial
+				  Prefetching ("URL data in generateMetadata"), and the locale is
+				  already resolved here.
+				*/}
+				<title>{t("title")}</title>
+				<meta name="description" content={t("description")} />
+				<link rel="canonical" href={`/${locale}`} />
+				<link rel="alternate" hrefLang="en" href="/en" />
+				<link rel="alternate" hrefLang="ar" href="/ar" />
 				<Providers>
 					<NextIntlClientProvider>{children}</NextIntlClientProvider>
 				</Providers>
