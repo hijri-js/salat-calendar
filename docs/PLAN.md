@@ -6,7 +6,7 @@ Prayer times move a few minutes every day with the sun, so a normal "repeat dail
 
 It is an open-source project under the GitHub organization `hijri-js` (repo `hijri-js/salat-calendar`), shown on `khaled-portfolio.pages.dev`. It must show the whole product path: problem, competitor analysis, scoping, architecture, tested code, delivery. It is also Khaled's first real Next.js project, so the build doubles as a learning track.
 
-The workspace today holds only `instructions.md` and `gemini-chat.md` (reference only, not facts). There is no git repo yet.
+The code lives in the git repo `hijri-js/salat-calendar`. `instructions.md` and `gemini-chat.md` were the starting notes (reference only, not facts).
 
 ---
 
@@ -81,7 +81,7 @@ In code: the event tag is `app=salat-calendar`, event IDs start with `sc`, and t
 | Layer          | Choice                                                                                 |
 | -------------- | -------------------------------------------------------------------------------------- |
 | Framework      | Next.js (latest, App Router), TypeScript strict, pnpm only                             |
-| UI             | Tailwind CSS v4, shadcn/ui (Radix), Lucide icons, logical properties (`ms-`, `pe-`...) |
+| UI             | Tailwind CSS v4, native HTML elements (`dialog`, `details`, `popover`), Lucide icons, logical properties (`ms-`, `pe-`...); see [ADR 0001](adr/0001-native-ui-over-shadcn.md) |
 | i18n           | `next-intl`, routes `/en` and `/ar`, `dir="rtl"` for Arabic, numerals stay Latin       |
 | Client state   | Zustand (wizard config, in memory)                                                     |
 | Server state   | TanStack Query (preview query; one mutation per month chunk)                           |
@@ -595,26 +595,25 @@ Code for one feature sits together: its components, hooks, logic, and tests. Sha
 ```
 salat-calendar/
 ├─ .github/{dependabot.yml, workflows/ci-security.yml}
-├─ docs/{PLAN.md, PRD.md, ARCHITECTURE.md, BACKLOG.md}
+├─ docs/{PLAN.md, PRD.md, ARCHITECTURE.md, BACKLOG.md, adr/}
 ├─ messages/{en.json, ar.json}
 ├─ src/
 │  ├─ app/                         (routing only; thin files that import features)
 │  │  ├─ [locale]/{layout.tsx, page.tsx, privacy/page.tsx, terms/page.tsx}
 │  │  └─ api/{prayers/preview, calendar/sync-month, calendar/cleanup}/route.ts
 │  ├─ features/
-│  │  ├─ wizard/        Stepper, Wizard shell, config-store.ts, validity rules
-│  │  ├─ location/      StepPlace, geocoding.ts, useGeolocation.ts, methods.ts
+│  │  ├─ wizard/        Stepper, Wizard shell, configStore.ts, validity rules
+│  │  ├─ location/      StepPlace, geocoding.ts, useCitySearch.ts, useGeolocation.ts, methods.ts
 │  │  ├─ rules/         StepPrayers, StepTiming, StepCalendar
 │  │  ├─ preview/       StepPreview, WeekGrid, MiniPreview, usePreview.ts
 │  │  ├─ ics-export/    ics.ts, useIcsDownload.ts, DownloadCard
-│  │  ├─ google-sync/   google-auth.ts (token popup), useYearSync.ts, SyncCard,
+│  │  ├─ google-sync/   googleAuth.ts (token popup), useYearSync.ts, SyncCard,
 │  │  │                 server/{client, batch, calendars, ooo, reconcile}.ts
 │  │  └─ cleanup/       useCleanup.ts, CleanupButton, server/cleanup.ts
 │  ├─ lib/
 │  │  ├─ prayer-engine/ {types, time, scheduler, titles, index}.ts + __tests__/scheduler.test.ts
-│  │  ├─ prayer-data/   {aladhan, local-fallback, normalize, cache}.ts
+│  │  ├─ prayer-data/   {aladhan, localFallback, normalize, cache, preview}.ts
 │  │  └─ sync/          {chunks, schema}.ts
-│  ├─ components/ui/    (shadcn primitives)
 │  └─ i18n/{routing, request}.ts
 ├─ AGENTS.md, CLAUDE.md (imports AGENTS.md), README.md, LICENSE (Apache-2.0)
 ├─ .env.example, .gitignore, wrangler.jsonc, open-next.config.ts
@@ -653,7 +652,7 @@ Nothing in this table blocks approving the plan.
 5. **Data access → Add scopes**: `calendar.app.created`, `calendar.events.readonly`, `calendar.events`.
 6. **Clients → Create client** → type **Web application** → under **Authorized JavaScript origins** add `http://localhost:3000`. Leave redirect URIs empty.
 7. Copy the **Client ID** (ends in `.apps.googleusercontent.com`).
-8. Create the file `.env.local` in the project folder (today `D:\My Projects\github\salaat-sync\`) with one line:
+8. Create the file `.env.local` in the project folder (the repo folder, `salat-calendar`) with one line:
    `NEXT_PUBLIC_GOOGLE_CLIENT_ID=<paste here>`
 
 There is no client secret to save. The client ID is public by design (it ships in the page), but `.env.local` stays git-ignored anyway. `.env.example` will list this one variable; the three other names in `instructions.md` (`GOOGLE_CLIENT_SECRET`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`) are not needed with this sign-in flow, and the README says why.
@@ -795,15 +794,18 @@ flowchart LR
 ### PR 5: Wizard and live preview
 
 - `next-intl`, RTL layout, stepper with free navigation, six steps, defaults, validity marks, Zustand store, `WeekGrid`, `MiniPreview`, city search, GPS.
+- Also in this PR: engine, fallback and schema fixes; preview API hardening; security headers; CI fixes; UI/UX restyle with native HTML elements and Lucide icons ([ADR 0001](adr/0001-native-ui-over-shadcn.md)).
 - **Check (browser):** `/en` and `/ar`; jump between steps in any order; final buttons disabled with no city and enabled after picking one; London + 08:00–16:00 hides Maghrib in June and shows it in December; "No Friday slot" removes Friday Dhuhr; keyboard-only pass; phone width has no sideways scroll.
 
 ### PR 6: `.ics` download
 
 - `ics.ts` (pure, tested: line folding, escaping, UTC conversion across DST, fixed UIDs), download card.
+- **Deferred (decided 2026-11-18):** `ics.ts` exists and is tested. The remaining work, the Download wiring (`useIcsDownload.ts`) and `DownloadCard`, moves to a later PR.
 - **Check:** import the file into Google Calendar and one other app; times match the preview on a DST-change week.
 
 ### PR 7: Google connect and sync
 
+- Prerequisites: Spikes 1–4 still open; tighten CSP (nonce or hashes) before handling tokens.
 - Token popup, scopes from 4.7, `google-sync/server/*`, `/api/calendar/sync-month`, paced `useYearSync`, progress and summary UI.
 - Tests: reconcile (insert/update/delete/replace-off), OOO parsing, chunk maths, batch encoding and partial failures, route validation, missing-token rejection.
 - **Check (needs 8.1):** sync a year into a test account; sync again and get 0 created; change the offset and re-sync, events move; add a vacation event and those days are skipped.
@@ -816,6 +818,7 @@ flowchart LR
 ### PR 9: Legal pages and deploy
 
 - Privacy and terms pages (per-scope explanations), `wrangler.jsonc`, `open-next.config.ts`, deploy guide, `docs/VERIFICATION.md` (steps from 8.4, scope justifications, video script).
+- Cloudflare per-IP rate-limit rule on `/api/prayers/preview`.
 - **Check:** `opennextjs-cloudflare build` succeeds; `wrangler dev` serves the app; live URL works after adding it to the Google client.
 
 ### Review loop (every PR)

@@ -5,14 +5,13 @@ This repo is **salat-calendar** (the folder was originally named `salaat-sync`).
 ## Hard rules
 
 - **pnpm only.** Never generate `package-lock.json` or `yarn.lock`.
-- **CI audit runs `pnpm audit --audit-level high --ignore-unfixable`.** Unfixable
-  advisories (no patched release upstream) are skipped deliberately — Dependabot
-  re-covers them the moment a fix ships. Do not add per-GHSA ignores unless a
-  reviewer asks; if a new advisory is fixable, bump or override the dependency
-  instead.
+- **CI audit runs `pnpm audit --audit-level high`.** A known advisory with no
+  patched release may be ignored only by its GHSA id in `pnpm-workspace.yaml`
+  (`auditConfig.ignoreGhsas`), with a comment saying why and when to remove it.
+  If an advisory is fixable, bump or override the dependency instead.
 - **Source files are camelCase** (`localFallback.ts`, not `local-fallback.ts`). Test files mirror the source name (`localFallback.test.ts`). Keep standard kebab-case only where ecosystems expect it: fixture data files, `.github/` workflows, and tool config files (`eslint.config.mjs`, `next.config.ts`).
 - **Use `@/` imports** for anything outside the current folder (e.g. `@/lib/prayer-engine/types`); plain relative `./` imports only within the same folder. The alias is configured in `tsconfig.json` and mirrored in `vitest.config.ts` — keep the two in sync if either changes.
-- **TypeScript strict**; Next.js App Router; Tailwind CSS v4 + shadcn/ui (Radix) + Lucide icons.
+- **TypeScript strict**; Next.js App Router; Tailwind CSS v4 + native HTML elements + Lucide icons (see docs/adr/0001).
 - **i18n:** `next-intl`, routes `/en` and `/ar`, `dir="rtl"` for Arabic, numerals stay Latin, logical CSS properties (`ms-`, `pe-`).
 - **No database.** User rules live in browser memory; event ownership lives on the Google event tags.
 - **Google access token never stored** — not in cookies, localStorage, server, or logs. No refresh token. Token travels in the `Authorization` header per request and is forgotten.
