@@ -1,4 +1,4 @@
-import { Cairo, Geist, Geist_Mono } from "next/font/google";
+import { Amiri, Fraunces, IBM_Plex_Sans, IBM_Plex_Sans_Arabic } from "next/font/google";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -8,20 +8,30 @@ import { routing } from "@/i18n/routing";
 import Providers from "@/app/providers";
 import "../globals.css";
 
-// Geist for Latin text, Cairo covers Arabic (with a matching Latin set).
-const geistSans = Geist({
-	variable: "--font-geist-sans",
+// One bilingual type system: Plex Sans + Plex Sans Arabic for text,
+// Fraunces + Amiri for headings. next/font self-hosts them (CSP font-src 'self').
+const plex = IBM_Plex_Sans({
+	variable: "--font-plex",
 	subsets: ["latin"],
+	weight: ["400", "500", "600"],
 });
 
-const geistMono = Geist_Mono({
-	variable: "--font-geist-mono",
-	subsets: ["latin"],
+const plexArabic = IBM_Plex_Sans_Arabic({
+	variable: "--font-plex-arabic",
+	subsets: ["arabic"],
+	weight: ["400", "500", "600"],
 });
 
-const cairo = Cairo({
-	variable: "--font-cairo",
-	subsets: ["arabic", "latin"],
+const fraunces = Fraunces({
+	variable: "--font-fraunces",
+	subsets: ["latin"],
+	axes: ["opsz", "SOFT"],
+});
+
+const amiri = Amiri({
+	variable: "--font-amiri",
+	subsets: ["arabic"],
+	weight: ["400", "700"],
 });
 
 /**
@@ -31,6 +41,9 @@ const cairo = Cairo({
  * out here (switching language is a full navigation anyway).
  */
 export const instant = false;
+
+/** Absolute origin for canonical/hreflang links (search engines need absolute URLs). */
+const SITE_URL = (process.env.SITE_URL || "http://localhost:3000").replace(/\/$/, "");
 
 export function generateStaticParams() {
 	return routing.locales.map((locale) => ({ locale }));
@@ -54,7 +67,7 @@ export default async function LocaleLayout({
 		<html
 			lang={locale}
 			dir={locale === "ar" ? "rtl" : "ltr"}
-			className={`${geistSans.variable} ${geistMono.variable} ${cairo.variable} h-full antialiased`}
+			className={`${plex.variable} ${plexArabic.variable} ${fraunces.variable} ${amiri.variable} h-full antialiased`}
 		>
 			<body className="flex min-h-full flex-col">
 				{/*
@@ -65,9 +78,9 @@ export default async function LocaleLayout({
 				*/}
 				<title>{t("title")}</title>
 				<meta name="description" content={t("description")} />
-				<link rel="canonical" href={`/${locale}`} />
-				<link rel="alternate" hrefLang="en" href="/en" />
-				<link rel="alternate" hrefLang="ar" href="/ar" />
+				<link rel="canonical" href={`${SITE_URL}/${locale}`} />
+				<link rel="alternate" hrefLang="en" href={`${SITE_URL}/en`} />
+				<link rel="alternate" hrefLang="ar" href={`${SITE_URL}/ar`} />
 				<Providers>
 					<NextIntlClientProvider>{children}</NextIntlClientProvider>
 				</Providers>
