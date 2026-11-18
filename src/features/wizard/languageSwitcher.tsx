@@ -2,7 +2,9 @@
 
 /**
  * EN | ع switcher: links between /en and /ar on the current page. The labels
- * are language endonyms, not translatable UI strings. Each target is at
+ * are language endonyms, not translatable UI strings. The visible label is
+ * the accessible name (voice control users say what they see); the full
+ * language name is the title. Each target is at
  * least 40×40 px (WCAG 2.5.8 asks for 24).
  */
 import { useLocale } from "next-intl";
@@ -30,7 +32,7 @@ export default function LanguageSwitcher() {
 						locale={target}
 						hrefLang={target}
 						lang={target}
-						aria-label={ENDONYMS[target].name}
+						title={ENDONYMS[target].name}
 						aria-current={current ? "true" : undefined}
 						className={`inline-flex min-h-9 min-w-10 items-center justify-center rounded-full px-2 ${
 							current ? "bg-ink font-semibold text-paper" : "text-muted hover:text-ink"

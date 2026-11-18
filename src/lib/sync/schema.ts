@@ -8,6 +8,11 @@ import { z } from "zod";
 
 import type { SyncConfig } from "@/lib/prayer-engine/types";
 
+// Our CSP has no 'unsafe-eval'. Zod v4 would otherwise probe `Function("")`
+// on first parse to decide whether to JIT validators; the CSP blocks it and
+// the browser logs an issue. Jitless mode skips the probe (same results).
+z.config({ jitless: true });
+
 export const prayerSchema = z.enum(["fajr", "dhuhr", "asr", "maghrib", "isha"]);
 export type PrayerValue = z.infer<typeof prayerSchema>;
 

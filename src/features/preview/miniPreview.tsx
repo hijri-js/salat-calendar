@@ -6,14 +6,13 @@
  * rule change shows up here at once. Each row shows the event time, or why
  * the prayer is off or skipped today.
  */
-import { useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { PRAYERS, type Prayer } from "@/lib/prayer-engine/types";
 import { useWizardConfig } from "@/features/wizard";
 
-import { todayIso } from "./week";
 import { usePreview } from "./usePreview";
+import { useToday } from "./useToday";
 
 const PRAYER_EMOJI: Record<Prayer, string> = {
 	fajr: "🌅",
@@ -24,11 +23,26 @@ const PRAYER_EMOJI: Record<Prayer, string> = {
 };
 
 export default function MiniPreview() {
+	const today = useToday();
+	// The prerendered shell has no clock; the browser fills it in at once.
+	return today === null ? <MiniPreviewShell /> : <MiniPreviewToday today={today} />;
+}
+
+function MiniPreviewShell() {
+	const t = useTranslations("miniPreview");
+	return (
+		<section className="rounded-2xl border border-line bg-paper-raised p-4">
+			<p className="text-lg font-semibold">{t("headingNoCity")}</p>
+			<p className="text-sm text-muted">{t("loading")}</p>
+		</section>
+	);
+}
+
+function MiniPreviewToday({ today }: { today: string }) {
 	const t = useTranslations("miniPreview");
 	const tPrayers = useTranslations("prayers");
 	const tPreview = useTranslations("preview");
 	const config = useWizardConfig((s) => s.config);
-	const [today] = useState(todayIso);
 
 	const preview = usePreview(config, today, today);
 	const plan = preview.days.find((day) => day.date === today);

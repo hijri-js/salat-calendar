@@ -15,8 +15,9 @@ import { useWizardConfig } from "@/features/wizard";
 import { NavButtons } from "@/features/rules";
 
 import { rangeLabel } from "./formatDate";
-import { addWeeks, todayIso, weekDates } from "./week";
+import { addWeeks, weekDates } from "./week";
 import { usePreview } from "./usePreview";
+import { useToday } from "./useToday";
 import WeekGrid from "./weekGrid";
 
 interface StepPreviewProps {
@@ -43,12 +44,22 @@ function clampWeekStart(weekStart: string): string {
 	return weekStart;
 }
 
-export default function StepPreview({ onBack, onNext }: StepPreviewProps) {
+export default function StepPreview(props: StepPreviewProps) {
+	const today = useToday();
+	const t = useTranslations("preview");
+	// Only the browser knows today; the prerendered shell shows "loading".
+	return today === null ? (
+		<p className="text-sm text-muted">{t("loading")}</p>
+	) : (
+		<StepPreviewWeek {...props} today={today} />
+	);
+}
+
+function StepPreviewWeek({ onBack, onNext, today }: StepPreviewProps & { today: string }) {
 	const t = useTranslations("preview");
 	const locale = useLocale();
 	const config = useWizardConfig((s) => s.config);
 
-	const [today] = useState(todayIso);
 	const [weekStart, setWeekStart] = useState(() => clampWeekStart(today));
 	const dates = weekDates(weekStart);
 	const from = dates[0];
