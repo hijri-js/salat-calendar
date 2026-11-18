@@ -92,7 +92,6 @@
 		"offsetLabel": "Start after adhan (min)",
 		"durationLabel": "Event length (min)",
 		"roundingLabel": "Snap start to the clock",
-		"gridLabel": "Grid",
 		"gridOff": "Off",
 		"grid5": "5 min",
 		"grid10": "10 min",
@@ -154,16 +153,13 @@
 			"ooo": "away"
 		},
 		"skipped": "skipped: {reason}",
-		"skippedShort": "skipped",
 		"windowStarts": "window starts {time}",
 		"windowEnds": "window ends {time}",
 		"legendBusy": "Busy",
 		"legendFree": "Free",
 		"legendSkipped": "Skipped (tap for the reason)",
 		"eventsWeek": "{count, plural, =0 {no events this week} one {# event this week} other {# events this week}}",
-		"yearEstimate": "about {countLatin} for the year",
-		"whySkipped": "Why {prayer} is skipped",
-		"weekOf": "Week of {range}"
+		"yearEstimate": "about {countLatin} for the year"
 	},
 	"miniPreview": {
 		"heading": "Today in {city}",

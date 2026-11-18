@@ -92,7 +92,6 @@
 		"offsetLabel": "البداية بعد الأذان (دقيقة)",
 		"durationLabel": "مدة الفعالية (دقيقة)",
 		"roundingLabel": "محاذاة البداية إلى الشبكة",
-		"gridLabel": "الشبكة",
 		"gridOff": "بلا",
 		"grid5": "5 دقائق",
 		"grid10": "10 دقائق",
@@ -154,16 +153,13 @@
 			"ooo": "غائب"
 		},
 		"skipped": "مُتخطى: {reason}",
-		"skippedShort": "مُتخطى",
 		"windowStarts": "تبدأ النافذة {time}",
 		"windowEnds": "تنتهي النافذة {time}",
 		"legendBusy": "مشغول",
 		"legendFree": "متفرغ",
 		"legendSkipped": "مُتخطى (انقر لمعرفة السبب)",
 		"eventsWeek": "{count, plural, =0 {لا فعاليات هذا الأسبوع} one {فعالية واحدة هذا الأسبوع} two {فعاليتان هذا الأسبوع} few {{countLatin} فعاليات هذا الأسبوع} many {{countLatin} فعالية هذا الأسبوع} other {{countLatin} فعالية هذا الأسبوع}}",
-		"yearEstimate": "نحو {countLatin} للعام",
-		"whySkipped": "لماذا تُتخطى {prayer}",
-		"weekOf": "أسبوع {range}"
+		"yearEstimate": "نحو {countLatin} للعام"
 	},
 	"miniPreview": {
 		"heading": "اليوم في {city}",

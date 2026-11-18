@@ -6,7 +6,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 
 import Providers from "@/app/providers";
-import "../globals.css";
+import "@/app/globals.css";
 
 // One bilingual type system: Plex Sans + Plex Sans Arabic for text,
 // Fraunces + Amiri for headings. next/font self-hosts them (CSP font-src 'self').

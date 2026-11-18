@@ -6,6 +6,13 @@ const withNextIntl = createNextIntlPlugin();
 
 const isDev = process.env.NODE_ENV === "development";
 
+// Canonical and hreflang links are baked into the static pages at build time.
+if (process.env.NODE_ENV === "production" && !process.env.SITE_URL) {
+	console.warn(
+		"[salat-calendar] SITE_URL is not set: canonical and hreflang links will point at http://localhost:3000.",
+	);
+}
+
 /**
  * Content Security Policy without nonces (Next.js CSP guide, "Without
  * Nonces"): nonces force every page to render per request, which would turn

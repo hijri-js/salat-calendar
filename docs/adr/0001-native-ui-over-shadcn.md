@@ -38,7 +38,7 @@ Browsers now give us the hard parts for free:
 | Prayer toggles, days, Jummah mode | `<input type="checkbox">` and `<input type="radio">`                           |
 | Per-prayer "Customise"            | `<details>` / `<summary>`                                                      |
 | "Remove all" confirm (PR 8)       | `<dialog>` opened with `showModal()`                                           |
-| Skip-reason hint in the preview   | A `<button>` that toggles a `popover` (toggletip). Today it is a hover `title`, which touch users cannot see |
+| Skip-reason hint in the preview   | A `<button>` that opens a `popover` (toggletip), so touch and keyboard users get it too (was a hover-only `title` before PR 5) |
 | Week ◀ / ▶ buttons                | Lucide `ChevronLeft` / `ChevronRight`, mirrored with `rtl:-scale-x-100`        |
 
 ## Consequences
