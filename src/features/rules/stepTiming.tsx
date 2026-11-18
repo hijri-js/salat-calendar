@@ -10,6 +10,7 @@ import { useTranslations } from "next-intl";
 import { useWizardConfig } from "@/features/wizard";
 
 import NavButtons from "./navButtons";
+import NumberField from "./numberField";
 
 interface StepTimingProps {
 	onBack?: () => void;
@@ -30,17 +31,6 @@ function timeToMin(value: string, fallback: number): number {
 		return fallback;
 	}
 	return Math.min(1439, Math.max(0, h * 60 + m));
-}
-
-/**
- * Keeps NaN out of the store while a number field is being edited, and
- * clamps finite values into a shared contract range (schema.ts).
- */
-function toClamped(value: number, fallback: number, min: number, max: number): number {
-	if (!Number.isFinite(value)) {
-		return fallback;
-	}
-	return Math.min(max, Math.max(min, Math.round(value)));
 }
 
 /** Shared contract bounds (schema.ts): offset −180..180, duration 5..180. */
@@ -76,34 +66,20 @@ export default function StepTiming({ onBack, onNext }: StepTimingProps) {
 			<div className="flex flex-wrap items-end gap-4">
 				<label className="flex flex-col gap-1 text-sm">
 					{t("offsetLabel")}
-					<input
-						type="number"
-						min={OFFSET_BOUNDS.min}
-						max={OFFSET_BOUNDS.max}
-						step={1}
+					<NumberField
 						value={defaults.offsetMin}
-						onChange={(event) =>
-							updateDefaults({
-								offsetMin: toClamped(event.target.valueAsNumber, defaults.offsetMin, OFFSET_BOUNDS.min, OFFSET_BOUNDS.max),
-							})
-						}
-						className="w-24 rounded-lg border border-line-strong px-2 py-1.5"
+						bounds={OFFSET_BOUNDS}
+						onCommit={(next) => next !== undefined && updateDefaults({ offsetMin: next })}
+						className="w-24 px-2 py-1.5"
 					/>
 				</label>
 				<label className="flex flex-col gap-1 text-sm">
 					{t("durationLabel")}
-					<input
-						type="number"
-						min={DURATION_BOUNDS.min}
-						max={DURATION_BOUNDS.max}
-						step={1}
+					<NumberField
 						value={defaults.durationMin}
-						onChange={(event) =>
-							updateDefaults({
-								durationMin: toClamped(event.target.valueAsNumber, defaults.durationMin, DURATION_BOUNDS.min, DURATION_BOUNDS.max),
-							})
-						}
-						className="w-24 rounded-lg border border-line-strong px-2 py-1.5"
+						bounds={DURATION_BOUNDS}
+						onCommit={(next) => next !== undefined && updateDefaults({ durationMin: next })}
+						className="w-24 px-2 py-1.5"
 					/>
 				</label>
 			</div>
@@ -240,19 +216,12 @@ export default function StepTiming({ onBack, onNext }: StepTimingProps) {
 							<label htmlFor="jummah-fixed-duration">
 								{t("jummahDurationLabel")}
 							</label>
-							<input
+							<NumberField
 								id="jummah-fixed-duration"
-								type="number"
-								min={DURATION_BOUNDS.min}
-								max={DURATION_BOUNDS.max}
-								step={1}
 								value={jummah.durationMin ?? 60}
-								onChange={(event) =>
-									updateJummah({
-										durationMin: toClamped(event.target.valueAsNumber, 60, DURATION_BOUNDS.min, DURATION_BOUNDS.max),
-									})
-								}
-								className="w-20 rounded-lg border border-line-strong px-2 py-1"
+								bounds={DURATION_BOUNDS}
+								onCommit={(next) => next !== undefined && updateJummah({ durationMin: next })}
+								className="w-20 px-2 py-1"
 							/>
 						</div>
 					) : null}
@@ -272,36 +241,22 @@ export default function StepTiming({ onBack, onNext }: StepTimingProps) {
 							<label htmlFor="jummah-custom-offset">
 								{t("jummahOffsetLabel")}
 							</label>
-							<input
+							<NumberField
 								id="jummah-custom-offset"
-								type="number"
-								min={OFFSET_BOUNDS.min}
-								max={OFFSET_BOUNDS.max}
-								step={1}
 								value={jummah.offsetMin ?? 0}
-								onChange={(event) =>
-									updateJummah({
-										offsetMin: toClamped(event.target.valueAsNumber, 0, OFFSET_BOUNDS.min, OFFSET_BOUNDS.max),
-									})
-								}
-								className="w-20 rounded-lg border border-line-strong px-2 py-1"
+								bounds={OFFSET_BOUNDS}
+								onCommit={(next) => next !== undefined && updateJummah({ offsetMin: next })}
+								className="w-20 px-2 py-1"
 							/>
 							<label htmlFor="jummah-custom-duration">
 								{t("jummahDurationLabel")}
 							</label>
-							<input
+							<NumberField
 								id="jummah-custom-duration"
-								type="number"
-								min={DURATION_BOUNDS.min}
-								max={DURATION_BOUNDS.max}
-								step={1}
 								value={jummah.durationMin ?? 45}
-								onChange={(event) =>
-									updateJummah({
-										durationMin: toClamped(event.target.valueAsNumber, 45, DURATION_BOUNDS.min, DURATION_BOUNDS.max),
-									})
-								}
-								className="w-20 rounded-lg border border-line-strong px-2 py-1"
+								bounds={DURATION_BOUNDS}
+								onCommit={(next) => next !== undefined && updateJummah({ durationMin: next })}
+								className="w-20 px-2 py-1"
 							/>
 						</div>
 					) : null}

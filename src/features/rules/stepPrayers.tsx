@@ -14,6 +14,7 @@ import type { Prayer, Weekday } from "@/lib/prayer-engine/types";
 import { PRAYERS } from "@/lib/prayer-engine/types";
 
 import NavButtons from "./navButtons";
+import NumberField from "./numberField";
 
 /** Language-neutral glyphs shown next to each prayer name. */
 const PRAYER_EMOJI: Record<Prayer, string> = {
@@ -36,20 +37,6 @@ interface StepPrayersProps {
 /** Shared contract bounds (schema.ts): offset −180..180, duration 5..180. */
 const OFFSET_BOUNDS = { min: -180, max: 180 } as const;
 const DURATION_BOUNDS = { min: 5, max: 180 } as const;
-
-/**
- * Keeps NaN out of the store while a number field is being edited, and
- * clamps any finite value into the shared contract's inclusive range.
- */
-function toClampedInt(
-	value: number,
-	bounds: { min: number; max: number },
-): number | undefined {
-	if (!Number.isFinite(value)) {
-		return undefined;
-	}
-	return Math.min(bounds.max, Math.max(bounds.min, Math.round(value)));
-}
 
 export default function StepPrayers({ onBack, onNext }: StepPrayersProps) {
 	const t = useTranslations("prayers");
@@ -110,43 +97,31 @@ export default function StepPrayers({ onBack, onNext }: StepPrayersProps) {
 									<div className="mt-2 flex flex-wrap items-end gap-3 border-s-2 border-line ps-3 text-sm">
 										<label className="flex flex-col gap-1">
 											{t("offsetLabel")}
-											<input
-												type="number"
-												min={OFFSET_BOUNDS.min}
-												max={OFFSET_BOUNDS.max}
-												step={1}
-												value={rule.offsetMin ?? ""}
+											<NumberField
+												value={rule.offsetMin}
+												bounds={OFFSET_BOUNDS}
+												optional
 												placeholder={String(defaults.offsetMin)}
-												onChange={(event) =>
-													updatePrayer(prayer, {
-														offsetMin: toClampedInt(event.target.valueAsNumber, OFFSET_BOUNDS),
-													})
-												}
-												className="w-20 rounded-lg border border-line-strong px-2 py-1"
+												onCommit={(next) => updatePrayer(prayer, { offsetMin: next })}
+												className="w-20 px-2 py-1"
 											/>
 										</label>
 										<label className="flex flex-col gap-1">
 											{t("durationLabel")}
-											<input
-												type="number"
-												min={DURATION_BOUNDS.min}
-												max={DURATION_BOUNDS.max}
-												step={1}
-												value={rule.durationMin ?? ""}
+											<NumberField
+												value={rule.durationMin}
+												bounds={DURATION_BOUNDS}
+												optional
 												placeholder={String(defaults.durationMin)}
-												onChange={(event) =>
-													updatePrayer(prayer, {
-														durationMin: toClampedInt(event.target.valueAsNumber, DURATION_BOUNDS),
-													})
-												}
-												className="w-20 rounded-lg border border-line-strong px-2 py-1"
+												onCommit={(next) => updatePrayer(prayer, { durationMin: next })}
+												className="w-20 px-2 py-1"
 											/>
 										</label>
 										<label className="flex flex-col gap-1">
 											{t("emojiLabel")}
 											<input
 												type="text"
-												maxLength={4}
+												maxLength={16}
 												value={rule.emoji ?? ""}
 												placeholder={PRAYER_EMOJI[prayer]}
 												onChange={(event) =>
