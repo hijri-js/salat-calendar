@@ -8,6 +8,7 @@
  */
 import { useState, type FormEvent } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { X } from "lucide-react";
 
 import { useWizardConfig } from "@/features/wizard";
 
@@ -50,7 +51,7 @@ export default function StepCalendar({ onBack, onNext }: StepCalendarProps) {
 
 	return (
 		<section aria-labelledby="calendar-heading" className="flex flex-col gap-4">
-			<h2 id="calendar-heading" className="text-xl font-semibold">
+			<h2 id="calendar-heading" className="text-(length:--text-title)">
 				{t("heading")}
 			</h2>
 
@@ -86,7 +87,7 @@ export default function StepCalendar({ onBack, onNext }: StepCalendarProps) {
 								colorId: event.target.value === "" ? undefined : event.target.value,
 							})
 						}
-						className="rounded-lg border border-black/15 px-2 py-1.5 dark:border-white/20"
+						className="rounded-lg border border-line-strong px-2 py-1.5"
 					>
 						<option value="">{t("colourDefault")}</option>
 						{GOOGLE_COLORS.map((color) => (
@@ -105,7 +106,7 @@ export default function StepCalendar({ onBack, onNext }: StepCalendarProps) {
 								reminderMin: Number(event.target.value) || undefined,
 							})
 						}
-						className="rounded-lg border border-black/15 px-2 py-1.5 dark:border-white/20"
+						className="rounded-lg border border-line-strong px-2 py-1.5"
 					>
 						<option value={0}>{t("reminderNone")}</option>
 						{REMINDER_CHOICES.map((minutes) => (
@@ -117,7 +118,7 @@ export default function StepCalendar({ onBack, onNext }: StepCalendarProps) {
 				</label>
 			</div>
 
-			<h3 className="text-lg font-semibold">{t("googleHeading")}</h3>
+			<h3 className="text-lg">{t("googleHeading")}</h3>
 			<fieldset className="flex flex-col gap-1.5 text-sm">
 				<legend className="font-medium">{t("targetLabel")}</legend>
 				<label className="flex items-center gap-2">
@@ -128,7 +129,7 @@ export default function StepCalendar({ onBack, onNext }: StepCalendarProps) {
 						onChange={() => setTarget({ kind: "dedicated" })}
 					/>
 					{t("targetDedicated")}
-					<em className="opacity-60">({t("recommended")})</em>
+					<em className="text-muted">({t("recommended")})</em>
 				</label>
 				<label className="flex items-center gap-2">
 					<input
@@ -138,7 +139,7 @@ export default function StepCalendar({ onBack, onNext }: StepCalendarProps) {
 						onChange={() => setTarget({ kind: "primary" })}
 					/>
 					{t("targetPrimary")}
-					<em className="opacity-60">({t("extraPermission")})</em>
+					<em className="text-muted">({t("extraPermission")})</em>
 				</label>
 			</fieldset>
 
@@ -150,21 +151,21 @@ export default function StepCalendar({ onBack, onNext }: StepCalendarProps) {
 				/>
 				{t("oooLabel")}
 			</label>
-			<p className="ps-6 text-sm opacity-70">{t("oooHint")}</p>
+			<p className="ps-6 text-sm text-muted">{t("oooHint")}</p>
 			<ul className="flex flex-wrap gap-1.5 ps-6">
 				{config.ooo.keywords.map((keywordItem) => (
 					<li
 						key={keywordItem}
-						className="flex items-center gap-1 rounded-full border border-black/10 px-2.5 py-1 text-sm dark:border-white/15"
+						className="flex items-center gap-1 rounded-full border border-line bg-paper-raised py-0.5 pe-1 ps-3 text-sm"
 					>
 						{keywordItem}
 						<button
 							type="button"
 							aria-label={t("removeKeyword", { keyword: keywordItem })}
 							onClick={() => removeKeyword(keywordItem)}
-							className="opacity-60 hover:opacity-100"
+							className="inline-flex size-6 items-center justify-center rounded-full text-muted hover:bg-wash hover:text-ink"
 						>
-							×
+							<X aria-hidden className="size-3.5" />
 						</button>
 					</li>
 				))}
@@ -175,11 +176,11 @@ export default function StepCalendar({ onBack, onNext }: StepCalendarProps) {
 					value={keyword}
 					onChange={(event) => setKeyword(event.target.value)}
 					placeholder={t("keywordPlaceholder")}
-					className="rounded-lg border border-black/15 px-2 py-1.5 text-sm dark:border-white/20"
+					className="rounded-lg border border-line-strong px-2 py-1.5 text-sm"
 				/>
 				<button
 					type="submit"
-					className="rounded-full border border-black/15 px-3 py-1.5 text-sm dark:border-white/15"
+					className="btn"
 				>
 					{t("addKeyword")}
 				</button>

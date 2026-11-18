@@ -47,6 +47,11 @@ function toClamped(value: number, fallback: number, min: number, max: number): n
 const OFFSET_BOUNDS = { min: -180, max: 180 } as const;
 const DURATION_BOUNDS = { min: 5, max: 180 } as const;
 
+/** Wrap in Unicode LTR isolates (LRI … PDI) for use inside translated text. */
+function isolateLtr(text: string): string {
+	return `⁦${text}⁩`;
+}
+
 export default function StepTiming({ onBack, onNext }: StepTimingProps) {
 	const t = useTranslations("timing");
 	const defaults = useWizardConfig((s) => s.config.defaults);
@@ -64,7 +69,7 @@ export default function StepTiming({ onBack, onNext }: StepTimingProps) {
 
 	return (
 		<section aria-labelledby="timing-heading" className="flex flex-col gap-4">
-			<h2 id="timing-heading" className="text-xl font-semibold">
+			<h2 id="timing-heading" className="text-(length:--text-title)">
 				{t("heading")}
 			</h2>
 
@@ -82,7 +87,7 @@ export default function StepTiming({ onBack, onNext }: StepTimingProps) {
 								offsetMin: toClamped(event.target.valueAsNumber, defaults.offsetMin, OFFSET_BOUNDS.min, OFFSET_BOUNDS.max),
 							})
 						}
-						className="w-24 rounded-lg border border-black/15 px-2 py-1.5 dark:border-white/20"
+						className="w-24 rounded-lg border border-line-strong px-2 py-1.5"
 					/>
 				</label>
 				<label className="flex flex-col gap-1 text-sm">
@@ -98,7 +103,7 @@ export default function StepTiming({ onBack, onNext }: StepTimingProps) {
 								durationMin: toClamped(event.target.valueAsNumber, defaults.durationMin, DURATION_BOUNDS.min, DURATION_BOUNDS.max),
 							})
 						}
-						className="w-24 rounded-lg border border-black/15 px-2 py-1.5 dark:border-white/20"
+						className="w-24 rounded-lg border border-line-strong px-2 py-1.5"
 					/>
 				</label>
 			</div>
@@ -159,7 +164,7 @@ export default function StepTiming({ onBack, onNext }: StepTimingProps) {
 									endMin,
 								})
 							}
-							className="rounded-lg border border-black/15 px-2 py-1.5 dark:border-white/20"
+							className="rounded-lg border border-line-strong px-2 py-1.5"
 						/>
 					</label>
 					<label className="flex items-center gap-1.5">
@@ -173,24 +178,30 @@ export default function StepTiming({ onBack, onNext }: StepTimingProps) {
 									endMin: timeToMin(event.target.value, endMin),
 								})
 							}
-							className="rounded-lg border border-black/15 px-2 py-1.5 dark:border-white/20"
+							className="rounded-lg border border-line-strong px-2 py-1.5"
 						/>
 					</label>
 				</div>
 			) : null}
 			{windowOn ? (
-				<p className="ps-6 text-xs opacity-60" aria-live="polite">
-					{startMin > endMin
-						? t("windowHintOvernight", {
-								from: minToTime(startMin),
-								to: minToTime(endMin),
-							})
-						: t("windowHint", { from: minToTime(startMin), to: minToTime(endMin) })}
+				<p
+					className={`ps-6 text-xs ${startMin === endMin ? "font-medium text-warn" : "text-muted"}`}
+					aria-live="polite"
+				>
+					{startMin === endMin
+						? t("windowEmpty")
+						: t(startMin > endMin ? "windowHintOvernight" : "windowHint", {
+								// Isolate the times so "08:00–16:00" keeps its order in Arabic.
+								from: isolateLtr(minToTime(startMin)),
+								to: isolateLtr(minToTime(endMin)),
+							})}
 				</p>
 			) : null}
 
-			<h3 className="text-lg font-semibold">{t("jummahHeading")}</h3>
-			<fieldset className="flex flex-col gap-1.5 text-sm">
+			<fieldset className="flex flex-col gap-1.5 border-t border-line pt-5 text-sm">
+				<legend className="float-start mb-2 w-full font-display text-lg font-semibold">
+					{t("jummahHeading")}
+				</legend>
 				<div>
 					<label className="flex items-center gap-2">
 						<input
@@ -224,7 +235,7 @@ export default function StepTiming({ onBack, onNext }: StepTimingProps) {
 								onChange={(event) =>
 									updateJummah({ fixedTime: event.target.value || "12:30" })
 								}
-								className="rounded-lg border border-black/15 px-2 py-1 dark:border-white/20"
+								className="rounded-lg border border-line-strong px-2 py-1"
 							/>
 							<label htmlFor="jummah-fixed-duration">
 								{t("jummahDurationLabel")}
@@ -241,7 +252,7 @@ export default function StepTiming({ onBack, onNext }: StepTimingProps) {
 										durationMin: toClamped(event.target.valueAsNumber, 60, DURATION_BOUNDS.min, DURATION_BOUNDS.max),
 									})
 								}
-								className="w-20 rounded-lg border border-black/15 px-2 py-1 dark:border-white/20"
+								className="w-20 rounded-lg border border-line-strong px-2 py-1"
 							/>
 						</div>
 					) : null}
@@ -273,7 +284,7 @@ export default function StepTiming({ onBack, onNext }: StepTimingProps) {
 										offsetMin: toClamped(event.target.valueAsNumber, 0, OFFSET_BOUNDS.min, OFFSET_BOUNDS.max),
 									})
 								}
-								className="w-20 rounded-lg border border-black/15 px-2 py-1 dark:border-white/20"
+								className="w-20 rounded-lg border border-line-strong px-2 py-1"
 							/>
 							<label htmlFor="jummah-custom-duration">
 								{t("jummahDurationLabel")}
@@ -290,7 +301,7 @@ export default function StepTiming({ onBack, onNext }: StepTimingProps) {
 										durationMin: toClamped(event.target.valueAsNumber, 45, DURATION_BOUNDS.min, DURATION_BOUNDS.max),
 									})
 								}
-								className="w-20 rounded-lg border border-black/15 px-2 py-1 dark:border-white/20"
+								className="w-20 rounded-lg border border-line-strong px-2 py-1"
 							/>
 						</div>
 					) : null}

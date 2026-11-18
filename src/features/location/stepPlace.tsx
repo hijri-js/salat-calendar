@@ -9,6 +9,7 @@
  */
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { LocateFixed } from "lucide-react";
 
 import { useWizardConfig } from "@/features/wizard";
 import type { AsrSchool } from "@/lib/prayer-engine/types";
@@ -167,7 +168,7 @@ export default function StepPlace({ onNext }: StepPlaceProps) {
 
 	return (
 		<section aria-labelledby="place-heading" className="flex flex-col gap-4">
-			<h2 id="place-heading" className="text-xl font-semibold">
+			<h2 id="place-heading" className="text-(length:--text-title)">
 				{t("heading")}
 			</h2>
 
@@ -202,14 +203,14 @@ export default function StepPlace({ onNext }: StepPlaceProps) {
 					onBlur={() => setOpen(false)}
 					onKeyDown={onKeyDown}
 					placeholder={t("cityPlaceholder")}
-					className="rounded-lg border border-black/15 px-3 py-2 dark:border-white/20"
+					className="rounded-lg border border-line-strong px-3 py-2"
 				/>
 				{error ? (
-					<p role="alert" className="text-xs text-red-600 dark:text-red-400">
+					<p role="alert" className="text-xs text-danger">
 						{t("searchError")}
 					</p>
 				) : (
-					<p id={`${inputId}-hint`} className="text-xs opacity-60">
+					<p id={`${inputId}-hint`} className="text-xs text-muted">
 						{loading ? t("searching") : t("searchHint")}
 					</p>
 				)}
@@ -219,7 +220,7 @@ export default function StepPlace({ onNext }: StepPlaceProps) {
 						id={listId}
 						role="listbox"
 						aria-label={t("cityResults")}
-						className="max-h-60 overflow-y-auto rounded-lg border border-black/15 bg-background shadow-sm dark:border-white/20"
+						className="max-h-60 overflow-y-auto rounded-lg border border-line-strong bg-background shadow-sm"
 					>
 						{hasResults ? (
 							results.map((city, index) => (
@@ -236,18 +237,18 @@ export default function StepPlace({ onNext }: StepPlaceProps) {
 									onMouseEnter={() => setHighlighted(index)}
 									className={`cursor-pointer px-3 py-2 text-sm ${
 										index === highlighted
-											? "bg-black/5 dark:bg-white/10"
+											? "bg-wash"
 											: ""
 									}`}
 								>
 									{city.label}
-									<span className="ms-2 text-xs opacity-60">{city.timezone}</span>
+									<span className="ms-2 text-xs text-muted">{city.timezone}</span>
 								</li>
 							))
 						) : (
 							<li
 								aria-live="polite"
-								className="px-3 py-2 text-sm opacity-60"
+								className="px-3 py-2 text-sm text-muted"
 							>
 								{loading ? t("searching") : t("searchNoResults")}
 							</li>
@@ -259,29 +260,37 @@ export default function StepPlace({ onNext }: StepPlaceProps) {
 					type="button"
 					disabled={geolocation.locating}
 					onClick={() => void detectLocation()}
-					className="w-fit rounded-full border border-black/15 px-4 py-1.5 text-sm font-medium disabled:opacity-50 dark:border-white/15"
+					className="btn w-fit"
 				>
+					<LocateFixed aria-hidden className="size-4" />
 					{geolocation.locating ? t("gpsLocating") : t("gpsButton")}
 				</button>
 				{gpsErrorMessage ? (
-					<p role="alert" className="text-xs text-red-600 dark:text-red-400">
+					<p role="alert" className="text-xs text-danger">
 						{gpsErrorMessage}
 					</p>
 				) : null}
 			</form>
 
-			<dl className="flex flex-col gap-1 rounded-lg border border-black/10 p-3 text-sm dark:border-white/15">
-				<dt className="opacity-60">{t("currentPlace")}</dt>
-				<dd className="font-medium">{location.label ?? t("notSet")}</dd>
-				<dt className="opacity-60">{t("coordinates")}</dt>
-				<dd>
-					{location.latitude}, {location.longitude}
-				</dd>
-				<dt className="opacity-60">{t("timezoneLabel")}</dt>
-				<dd>{location.timezone ?? t("notSet")}</dd>
-			</dl>
+			{/* Only once a place is set: 0, 0 is not a real answer. */}
+			{location.label ? (
+				<dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1 rounded-xl bg-wash px-4 py-3 text-sm">
+					<dt className="text-muted">{t("currentPlace")}</dt>
+					<dd className="font-medium">{location.label}</dd>
+					<dt className="text-muted">{t("coordinates")}</dt>
+					<dd className="tabular-nums">
+						<bdi dir="ltr">
+							{location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
+						</bdi>
+					</dd>
+					<dt className="text-muted">{t("timezoneLabel")}</dt>
+					<dd>
+						<bdi dir="ltr">{location.timezone ?? t("notSet")}</bdi>
+					</dd>
+				</dl>
+			) : null}
 			{usedGps ? (
-				<p className="text-xs opacity-60">{t("gpsTimezoneHint")}</p>
+				<p className="text-xs text-muted">{t("gpsTimezoneHint")}</p>
 			) : null}
 
 			<label htmlFor="method-input" className="text-sm font-medium">
@@ -291,7 +300,7 @@ export default function StepPlace({ onNext }: StepPlaceProps) {
 				id="method-input"
 				value={method}
 				onChange={(event) => setMethod(Number(event.target.value))}
-				className="rounded-lg border border-black/15 px-3 py-2 dark:border-white/20"
+				className="rounded-lg border border-line-strong px-3 py-2"
 			>
 				{methodOrder.map((id) => (
 					<option key={id} value={id}>
@@ -300,7 +309,7 @@ export default function StepPlace({ onNext }: StepPlaceProps) {
 				))}
 			</select>
 			{chosenCountry !== null && chosenCountry.name !== "" ? (
-				<p className="text-xs opacity-60">
+				<p className="text-xs text-muted">
 					{t("suggestedFor", { country: chosenCountry.name })}
 				</p>
 			) : null}

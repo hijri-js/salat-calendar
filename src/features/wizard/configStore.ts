@@ -57,6 +57,8 @@ export const defaultConfig: SyncConfig = {
 
 export interface WizardState {
 	config: SyncConfig;
+	/** True once the user picked the title language themselves. */
+	titleLocaleChosen: boolean;
 	setLocation: (location: Partial<Location>) => void;
 	setMethod: (method: number) => void;
 	setSchool: (school: AsrSchool) => void;
@@ -69,7 +71,10 @@ export interface WizardState {
 	setWindow: (window: TimeWindow | null) => void;
 	updateJummah: (patch: Partial<JummahRule>) => void;
 	updateOoo: (patch: Partial<OooRule>) => void;
+	/** The user's own choice; from then on the UI language no longer overrides it. */
 	setTitleLocale: (titleLocale: TitleLocale) => void;
+	/** Follow the UI language for titles, unless the user already chose one. */
+	adoptUiLocale: (locale: TitleLocale) => void;
 	setTarget: (target: Target) => void;
 	setReplaceExisting: (replaceExisting: boolean) => void;
 	/** Back to the plan defaults. */
@@ -78,6 +83,7 @@ export interface WizardState {
 
 export const useWizardConfig = create<WizardState>()((set) => ({
 	config: defaultConfig,
+	titleLocaleChosen: false,
 	setLocation: (location) =>
 		set(({ config }) => ({
 			config: { ...config, location: { ...config.location, ...location } },
@@ -131,11 +137,17 @@ export const useWizardConfig = create<WizardState>()((set) => ({
 			config: { ...config, ooo: { ...config.ooo, ...patch } },
 		})),
 	setTitleLocale: (titleLocale) =>
-		set(({ config }) => ({ config: { ...config, titleLocale } })),
+		set(({ config }) => ({ config: { ...config, titleLocale }, titleLocaleChosen: true })),
+	adoptUiLocale: (locale) =>
+		set((state) =>
+			state.titleLocaleChosen || state.config.titleLocale === locale
+				? state
+				: { config: { ...state.config, titleLocale: locale } },
+		),
 	setTarget: (target) => set(({ config }) => ({ config: { ...config, target } })),
 	setReplaceExisting: (replaceExisting) =>
 		set(({ config }) => ({ config: { ...config, replaceExisting } })),
-	reset: () => set({ config: defaultConfig }),
+	reset: () => set({ config: defaultConfig, titleLocaleChosen: false }),
 }));
 
 /**

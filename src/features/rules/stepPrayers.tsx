@@ -7,6 +7,7 @@
  * config store.
  */
 import { useTranslations } from "next-intl";
+import { ChevronDown } from "lucide-react";
 
 import { useWizardConfig } from "@/features/wizard";
 import type { Prayer, Weekday } from "@/lib/prayer-engine/types";
@@ -61,17 +62,17 @@ export default function StepPrayers({ onBack, onNext }: StepPrayersProps) {
 
 	return (
 		<section aria-labelledby="prayers-heading" className="flex flex-col gap-4">
-			<h2 id="prayers-heading" className="text-xl font-semibold">
+			<h2 id="prayers-heading" className="text-(length:--text-title)">
 				{t("heading")}
 			</h2>
 
-			<ul className="flex flex-col gap-2">
+			<ul className="flex flex-col divide-y divide-line rounded-xl border border-line bg-paper-raised">
 				{PRAYERS.map((prayer) => {
 					const rule = prayers[prayer];
 					return (
 						<li
 							key={prayer}
-							className="flex flex-col gap-2 rounded-lg border border-black/10 p-3 dark:border-white/15"
+							className={`flex flex-col gap-2 px-3 py-2.5 ${rule.enabled ? "" : "text-muted"}`}
 						>
 							<div className="flex flex-wrap items-center gap-3">
 								<label className="flex items-center gap-2 text-sm font-medium">
@@ -93,16 +94,20 @@ export default function StepPrayers({ onBack, onNext }: StepPrayersProps) {
 											transparency: event.target.value as "opaque" | "transparent",
 										})
 									}
-									className="rounded-lg border border-black/15 px-2 py-1 text-sm dark:border-white/20"
+									className="rounded-lg border border-line-strong px-2 py-1 text-sm"
 								>
 									<option value="opaque">{t("busy")}</option>
 									<option value="transparent">{t("free")}</option>
 								</select>
-								<details className="ms-auto">
-									<summary className="cursor-pointer text-sm underline-offset-4 hover:underline">
+								<details className="group ms-auto">
+									<summary className="inline-flex min-h-10 list-none items-center gap-1 text-sm font-medium text-accent-ink underline-offset-4 hover:underline [&::-webkit-details-marker]:hidden">
 										{t("customise")}
+										<ChevronDown
+											aria-hidden
+											className="size-4 transition-transform group-open:rotate-180"
+										/>
 									</summary>
-									<div className="mt-2 flex flex-wrap items-end gap-3 border-s-2 border-black/10 ps-3 text-sm dark:border-white/15">
+									<div className="mt-2 flex flex-wrap items-end gap-3 border-s-2 border-line ps-3 text-sm">
 										<label className="flex flex-col gap-1">
 											{t("offsetLabel")}
 											<input
@@ -117,7 +122,7 @@ export default function StepPrayers({ onBack, onNext }: StepPrayersProps) {
 														offsetMin: toClampedInt(event.target.valueAsNumber, OFFSET_BOUNDS),
 													})
 												}
-												className="w-20 rounded-lg border border-black/15 px-2 py-1 dark:border-white/20"
+												className="w-20 rounded-lg border border-line-strong px-2 py-1"
 											/>
 										</label>
 										<label className="flex flex-col gap-1">
@@ -134,7 +139,7 @@ export default function StepPrayers({ onBack, onNext }: StepPrayersProps) {
 														durationMin: toClampedInt(event.target.valueAsNumber, DURATION_BOUNDS),
 													})
 												}
-												className="w-20 rounded-lg border border-black/15 px-2 py-1 dark:border-white/20"
+												className="w-20 rounded-lg border border-line-strong px-2 py-1"
 											/>
 										</label>
 										<label className="flex flex-col gap-1">
@@ -149,7 +154,7 @@ export default function StepPrayers({ onBack, onNext }: StepPrayersProps) {
 														emoji: event.target.value || undefined,
 													})
 												}
-												className="w-16 rounded-lg border border-black/15 px-2 py-1 dark:border-white/20"
+												className="w-16 rounded-lg border border-line-strong px-2 py-1"
 											/>
 										</label>
 										<label className="flex flex-col gap-1">
@@ -164,7 +169,7 @@ export default function StepPrayers({ onBack, onNext }: StepPrayersProps) {
 														title: event.target.value || undefined,
 													})
 												}
-												className="w-40 rounded-lg border border-black/15 px-2 py-1 dark:border-white/20"
+												className="w-40 rounded-lg border border-line-strong px-2 py-1"
 											/>
 										</label>
 									</div>
@@ -175,14 +180,15 @@ export default function StepPrayers({ onBack, onNext }: StepPrayersProps) {
 				})}
 			</ul>
 
-			<h3 className="text-lg font-semibold">{t("daysHeading")}</h3>
+			<h3 className="text-lg">{t("daysHeading")}</h3>
 			<div className="flex flex-wrap items-center gap-1.5">
 				{ALL_DAYS.map((day) => (
 					<label
 						key={day}
-						className="flex items-center gap-1 rounded-full border border-black/10 px-2.5 py-1 text-sm dark:border-white/15"
+						className="inline-flex min-h-10 min-w-12 cursor-pointer items-center justify-center rounded-full border border-line-strong px-3 text-sm has-checked:border-ink has-checked:bg-ink has-checked:text-paper has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent"
 					>
 						<input
+							className="sr-only"
 							type="checkbox"
 							checked={days.includes(day)}
 							onChange={() => toggleDay(day)}
@@ -190,25 +196,25 @@ export default function StepPrayers({ onBack, onNext }: StepPrayersProps) {
 						{t(`days.${day}`)}
 					</label>
 				))}
-				<span className="ms-2 text-xs opacity-60">{t("presetsLabel")}:</span>
+				<span className="ms-2 text-xs text-muted">{t("presetsLabel")}:</span>
 				<button
 					type="button"
 					onClick={() => setDays([...ALL_DAYS])}
-					className="rounded-full px-2 py-1 text-xs underline underline-offset-4"
+					className="inline-flex min-h-8 items-center rounded-full px-2 text-xs underline underline-offset-4 hover:bg-wash"
 				>
 					{t("presetAll")}
 				</button>
 				<button
 					type="button"
 					onClick={() => setDays([...SUN_THU])}
-					className="rounded-full px-2 py-1 text-xs underline underline-offset-4"
+					className="inline-flex min-h-8 items-center rounded-full px-2 text-xs underline underline-offset-4 hover:bg-wash"
 				>
 					{t("presetSunThu")}
 				</button>
 				<button
 					type="button"
 					onClick={() => setDays([...MON_FRI])}
-					className="rounded-full px-2 py-1 text-xs underline underline-offset-4"
+					className="inline-flex min-h-8 items-center rounded-full px-2 text-xs underline underline-offset-4 hover:bg-wash"
 				>
 					{t("presetMonFri")}
 				</button>

@@ -10,7 +10,7 @@ import {
 const store = () => useWizardConfig.getState();
 
 beforeEach(() => {
-	useWizardConfig.setState({ config: defaultConfig });
+	useWizardConfig.setState({ config: defaultConfig, titleLocaleChosen: false });
 });
 
 describe("defaults (plan §2/§6)", () => {
@@ -163,11 +163,27 @@ describe("actions", () => {
 		expect(store().config.replaceExisting).toBe(false);
 	});
 
+	it("titles follow the UI language until the user picks one (L7)", () => {
+		store().adoptUiLocale("ar");
+		expect(store().config.titleLocale).toBe("ar");
+
+		const before = store();
+		store().adoptUiLocale("ar");
+		expect(store()).toBe(before); // no-op keeps the same state object
+
+		store().setTitleLocale("en");
+		store().adoptUiLocale("ar");
+		expect(store().config.titleLocale).toBe("en");
+		expect(store().titleLocaleChosen).toBe(true);
+	});
+
 	it("reset returns to the defaults", () => {
 		store().setMethod(4);
+		store().setTitleLocale("ar");
 		store().reset();
 
 		expect(store().config).toEqual(defaultConfig);
+		expect(store().titleLocaleChosen).toBe(false);
 	});
 });
 

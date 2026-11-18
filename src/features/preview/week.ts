@@ -2,7 +2,7 @@
  * Pure week maths and the year estimate for the preview step (plan §6
  * step 5). No I/O, no framework imports.
  */
-import { addDays, weekdayOf } from "@/lib/prayer-engine";
+import { addDays } from "@/lib/prayer-engine";
 
 /** "YYYY-MM-DD" of today, in the device's own timezone (client only). */
 export function todayIso(): string {
@@ -13,21 +13,14 @@ export function todayIso(): string {
 	return `${y}-${m}-${d}`;
 }
 
-/** Monday-based week start of a "YYYY-MM-DD" date. */
-export function weekStartOf(date: string): string {
-	const weekday = weekdayOf(date); // 0 = Sunday … 6 = Saturday
-	const backToMonday = (weekday + 6) % 7;
-	return addDays(date, -backToMonday);
-}
-
-/** Move a week start by `n` whole weeks (Monday stays Monday). */
+/** Move a week start by `n` whole weeks (the weekday stays the same). */
 export function addWeeks(date: string, weeks: number): string {
 	return addDays(date, weeks * 7);
 }
 
-/** The seven "YYYY-MM-DD" dates of the week starting on `monday`. */
-export function weekDates(monday: string): string[] {
-	return Array.from({ length: 7 }, (_, index) => addDays(monday, index));
+/** The seven "YYYY-MM-DD" dates starting on `start` (the preview starts today). */
+export function weekDates(start: string): string[] {
+	return Array.from({ length: 7 }, (_, index) => addDays(start, index));
 }
 
 /**

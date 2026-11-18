@@ -2,24 +2,25 @@
 
 /**
  * WeekGrid (plan §6 step 5 wireframe): one column per day, one row per hour
- * band (05:00–23:00 or adaptive when events fall outside), events as
- * blocks — Busy solid, Free hatched at 50% opacity — skipped slots greyed
- * with the SkipReason as tooltip and sr-only text, window markers inline at
- * their hour position, a legend, and the "N events this week · about M for
- * the year" line.
+ * band (05:00–23:00, or wider when events fall outside), events as blocks:
+ * Busy solid, Free hatched, skipped slots greyed. A skipped slot is a button
+ * that opens its reason in a popover (tap, click or Enter), so touch and
+ * keyboard users get it too, not only mouse hover.
  *
- * While placeholder data from the previous week is shown (TanStack
- * `isPlaceholderData`), the caller passes `placeholder` and the grid is
- * dimmed so stale data is never mistaken for the current week.
+ * Skips decided after the timing (outside the window, away) are drawn where
+ * the event would have started; earlier skips (prayer or day off) at the
+ * adhan time. Times are isolated as LTR so "05:09–05:29" never flips in
+ * Arabic. On a narrow container the same data renders as a day list.
  *
- * All strings come through the messages; numerals stay Latin.
+ * While placeholder data from the previous week is shown, the caller passes
+ * `placeholder` and the grid is dimmed.
  */
-import { Fragment, type ReactNode } from "react";
-import { useTranslations } from "next-intl";
+import { Fragment, useId, type CSSProperties } from "react";
+import { useLocale, useTranslations } from "next-intl";
 
-import type { DayPlan, DayTimings, TimeWindow, Weekday } from "@/lib/prayer-engine/types";
-import { weekdayOf } from "@/lib/prayer-engine";
+import type { DayPlan, DayTimings, TimeWindow } from "@/lib/prayer-engine/types";
 
+import { dayLabels } from "./formatDate";
 import { estimateYearEvents } from "./week";
 
 /** Hour bands rendered when there is nothing to say otherwise (plan §6). */
@@ -30,16 +31,23 @@ interface WeekGridProps {
 	plans: DayPlan[];
 	timings: DayTimings[];
 	window?: TimeWindow;
+	/** "YYYY-MM-DD" of today, highlighted in the header. */
+	today?: string;
 	/** True while the grid shows the previous week's placeholder data. */
 	placeholder?: boolean;
 }
 
 /** One renderable block inside a day/hour cell. */
 interface Block {
+	key: string;
 	title: string;
+	/** "HH:MM" or "HH:MM–HH:MM". */
 	time: string;
+	/** Minutes from midnight, for ordering inside a day. */
+	sortMin: number;
+	hour: number;
 	kind: "busy" | "free" | "skip";
-	/** Skip reason key, present only on skipped blocks. */
+	/** Translated skip reason, present only on skipped blocks. */
 	reason?: string;
 }
 
@@ -47,19 +55,8 @@ interface Block {
 interface WindowMarker {
 	text: string;
 	hour: number;
-}
-
-function hourOfLocalIso(iso: string): number {
-	return Number(iso.slice(11, 13));
-}
-
-/** Raw adhan time "HH:MM" of a prayer on one day, as an hour band. */
-function rawHourOf(timing: DayTimings | undefined, prayer: string): number | null {
-	const raw = timing?.times[prayer as keyof typeof timing.times];
-	if (raw === undefined) {
-		return null;
-	}
-	return Number(raw.slice(0, 2));
+	/** On the hour → drawn above that hour's row; otherwise below it. */
+	before: boolean;
 }
 
 /** Minutes-from-midnight → "HH:MM". */
@@ -67,74 +64,82 @@ function minToLabel(min: number): string {
 	return `${String(Math.floor(min / 60)).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
 }
 
+function hhmmToMin(hhmm: string): number {
+	return Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5));
+}
+
+const HATCH = "repeating-linear-gradient(45deg, currentColor 0 1.5px, transparent 1.5px 6px)";
+
 export default function WeekGrid({
 	plans,
 	timings,
 	window: timeWindow,
+	today,
 	placeholder = false,
 }: WeekGridProps) {
 	const t = useTranslations("preview");
 	const tPrayers = useTranslations("prayers");
+	const locale = useLocale();
+	const idBase = useId();
 
-	// ---- collect blocks and derive the adaptive hour range ----
-	const cells = new Map<string, Block[]>();
+	// ---- collect blocks per day and derive the adaptive hour range ----
+	const dates = plans.map((plan) => plan.date);
+	const dayIndex = new Map(dates.map((date, index) => [date, index]));
+	const byDate = new Map(timings.map((timing) => [timing.date, timing]));
+	const perDay: Block[][] = dates.map(() => []);
 	let minHour = DEFAULT_FIRST_HOUR;
 	let maxHour = DEFAULT_LAST_HOUR;
 	let eventCount = 0;
 
-	const pushBlock = (dateIndex: number, hour: number, block: Block) => {
-		const key = `${dateIndex}-${hour}`;
-		const existing = cells.get(key);
-		if (existing === undefined) {
-			cells.set(key, [block]);
-		} else {
-			existing.push(block);
-		}
-		if (hour < minHour) {
-			minHour = hour;
-		}
-		if (hour + 1 > maxHour) {
-			maxHour = hour + 1;
-		}
+	const push = (dateIndex: number, block: Block) => {
+		perDay[dateIndex].push(block);
+		minHour = Math.min(minHour, block.hour);
+		maxHour = Math.max(maxHour, block.hour + 1);
 	};
 
-	const byDate = new Map(timings.map((timing) => [timing.date, timing]));
-	const dates = plans.map((plan) => plan.date);
-	const dayIndex = new Map(dates.map((date, index) => [date, index]));
-
-	plans.forEach((plan, dateIndex) => {
+	plans.forEach((plan, planIndex) => {
 		const timing = byDate.get(plan.date);
 		for (const event of plan.events) {
-			// Midnight-crossing events are bucketed by the date they start on,
-			// not the plan's date, so they land in the correct day column;
-			// events outside the displayed week are simply not shown.
+			// Midnight-crossing events land in the column of the date they
+			// start on; events outside the displayed week are not shown.
 			const eventDateIndex = dayIndex.get(event.startLocal.slice(0, 10));
 			if (eventDateIndex === undefined) {
 				continue;
 			}
-			const hour = hourOfLocalIso(event.startLocal);
-			const time = event.startLocal.slice(11, 16);
-			const end = event.endLocal.slice(11, 16);
-			pushBlock(eventDateIndex, hour, {
+			const start = event.startLocal.slice(11, 16);
+			push(eventDateIndex, {
+				key: event.id,
 				title: event.title,
-				time: `${time}–${end}`,
+				time: `${start}–${event.endLocal.slice(11, 16)}`,
+				sortMin: hhmmToMin(start),
+				hour: Number(start.slice(0, 2)),
 				kind: event.transparency === "transparent" ? "free" : "busy",
 			});
 			eventCount += 1;
 		}
 		for (const skipped of plan.skipped) {
-			const hour = rawHourOf(timing, skipped.prayer);
-			if (hour === null) {
+			// Prefer where the event would have started; fall back to the adhan.
+			const startLocal = skipped.startLocal;
+			const targetIndex =
+				startLocal === undefined ? planIndex : dayIndex.get(startLocal.slice(0, 10));
+			const time = startLocal?.slice(11, 16) ?? timing?.times[skipped.prayer];
+			if (targetIndex === undefined || time === undefined) {
 				continue;
 			}
-			pushBlock(dateIndex, hour, {
+			push(targetIndex, {
+				key: `${plan.date}-${skipped.prayer}-skip`,
 				title: tPrayers(`prayer.${skipped.prayer}`),
-				time: timing?.times[skipped.prayer] ?? "",
+				time,
+				sortMin: hhmmToMin(time),
+				hour: Number(time.slice(0, 2)),
 				kind: "skip",
 				reason: t(`skipReason.${skipped.reason}`),
 			});
 		}
 	});
+	for (const blocks of perDay) {
+		blocks.sort((a, b) => a.sortMin - b.sortMin);
+	}
 
 	const hours: number[] = [];
 	for (let hour = minHour; hour < maxHour; hour += 1) {
@@ -143,19 +148,19 @@ export default function WeekGrid({
 
 	const yearEstimate = estimateYearEvents(eventCount);
 
-	// Window boundary markers, rendered inline at their own hour position
-	// inside the loop below — including an overnight window's end marker
-	// whenever its hour falls within the displayed range.
+	// Window boundary markers, drawn under their hour row.
 	const markersByHour = new Map<number, WindowMarker[]>();
 	if (timeWindow !== undefined) {
 		const markers: WindowMarker[] = [
 			{
 				text: t("windowStarts", { time: minToLabel(timeWindow.startMin) }),
 				hour: Math.floor(timeWindow.startMin / 60),
+				before: timeWindow.startMin % 60 === 0,
 			},
 			{
 				text: t("windowEnds", { time: minToLabel(timeWindow.endMin) }),
 				hour: Math.floor(timeWindow.endMin / 60),
+				before: timeWindow.endMin % 60 === 0,
 			},
 		];
 		for (const marker of markers) {
@@ -167,150 +172,207 @@ export default function WeekGrid({
 		}
 	}
 
-	return (
-		<div className="flex flex-col gap-3">
-			<div
-				className={`grid overflow-hidden rounded-lg border border-black/10 text-xs dark:border-white/15${
-					placeholder ? " opacity-60" : ""
-				}`}
-				style={{ gridTemplateColumns: "auto repeat(7, minmax(0, 1fr))" }}
-			>
-				{/* header row */}
-				<div className="bg-black/5 p-1 dark:bg-white/10" aria-hidden />
-				{dates.map((date) => (
-					<div
-						key={date}
-						className="bg-black/5 p-1 text-center font-medium dark:bg-white/10"
-					>
-						<div className="truncate">
-							{tPrayers(`days.${weekdayOf(date) as Weekday}`)}
-						</div>
-						<div className="opacity-60">{date.slice(8, 10)}</div>
-					</div>
-				))}
+	const renderMarkers = (hour: number, before: boolean) =>
+		(markersByHour.get(hour) ?? [])
+			.filter((marker) => marker.before === before)
+			.map((marker) => (
+				<div
+					key={marker.text}
+					style={{ gridColumn: "1 / -1" }}
+					className="flex items-center gap-2 px-2 py-0.5 text-[11px] text-accent-ink"
+				>
+					<span aria-hidden className="flex-1 border-t border-dashed border-accent" />
+					<span>{marker.text}</span>
+					<span aria-hidden className="flex-1 border-t border-dashed border-accent" />
+				</div>
+			));
 
-				{/* hour rows, each followed by its window marker (if any) */}
-				{hours.map((hour) => (
-					<Fragment key={hour}>
-						<BlockFragment hour={hour}>
+	// `view` keeps popover ids unique: both layouts are in the DOM.
+	const renderBlock = (block: Block, view: "grid" | "list") => {
+		const size = view === "grid" ? "text-[11px]" : "text-xs";
+		if (block.kind === "skip") {
+			const popoverId = `${idBase}-${view}-${block.key}`;
+			// Explicit anchor (a valid dashed ident) where anchor positioning
+			// exists; elsewhere the popover keeps the browser's centred spot.
+			const anchor = `--${popoverId.replace(/[^a-zA-Z0-9-]/g, "")}`;
+			return (
+				<Fragment key={block.key}>
+					<button
+						type="button"
+						popoverTarget={popoverId}
+						style={{ anchorName: anchor } as CSSProperties}
+						className={`skip-trigger w-full rounded-md bg-wash px-1.5 py-1 text-start text-muted ${size}`}
+					>
+						<span className="block truncate line-through decoration-line-strong">
+							{block.title}
+						</span>
+						<bdi dir="ltr" className="block truncate tabular-nums">
+							{block.time}
+						</bdi>
+						<span className="sr-only">
+							{t("skipped", { reason: block.reason ?? "" })}
+						</span>
+					</button>
+					<div
+						id={popoverId}
+						popover="auto"
+						style={{ positionAnchor: anchor } as CSSProperties}
+						className="skip-tip max-w-60 rounded-lg border border-line-strong bg-paper-raised px-3 py-2 text-sm text-ink shadow-lg"
+					>
+						<strong className="font-semibold">{block.title}</strong>{" "}
+						<bdi dir="ltr" className="tabular-nums">
+							{block.time}
+						</bdi>
+						<span className="block text-muted">
+							{t("skipped", { reason: block.reason ?? "" })}
+						</span>
+					</div>
+				</Fragment>
+			);
+		}
+		const busy = block.kind === "busy";
+		return (
+			<div
+				key={block.key}
+				title={`${block.title} ${block.time}`}
+				className={`rounded-md px-1.5 py-1 ${size} ${
+					busy ? "bg-ink text-paper" : "border border-ink/40 bg-paper-raised text-ink"
+				}`}
+			>
+				<span className="flex items-center gap-1 truncate font-medium">
+					{!busy ? (
+						<span
+							aria-hidden
+							className="inline-block h-2 w-3 flex-none rounded-sm text-muted"
+							style={{ backgroundImage: HATCH }}
+						/>
+					) : null}
+					<span className="truncate">{block.title}</span>
+				</span>
+				<bdi dir="ltr" className="block truncate tabular-nums opacity-80">
+					{block.time}
+				</bdi>
+			</div>
+		);
+	};
+
+	return (
+		<div className="@container flex flex-col gap-4">
+			<div className={`transition-opacity ${placeholder ? "opacity-50" : ""}`}>
+				{/* Wide container: the hour grid from the wireframe. */}
+				<div
+					className="hidden overflow-hidden rounded-xl border border-line bg-paper-raised @2xl:grid"
+					style={{ gridTemplateColumns: "3.25rem repeat(7, minmax(0, 1fr))" }}
+				>
+					<div className="border-b border-line bg-wash" aria-hidden />
+					{dates.map((date) => {
+						const label = dayLabels(date, locale);
+						const isToday = date === today;
+						return (
+							<div
+								key={date}
+								className={`border-b border-s border-line px-1 py-2 text-center ${
+									isToday ? "bg-accent-wash" : "bg-wash"
+								}`}
+							>
+								<div className="truncate text-xs text-muted">{label.weekday}</div>
+								<div
+									className={`text-base font-semibold tabular-nums ${
+										isToday ? "text-accent-ink" : ""
+									}`}
+								>
+									{label.day}
+								</div>
+							</div>
+						);
+					})}
+
+					{hours.map((hour) => (
+						<Fragment key={hour}>
+							{renderMarkers(hour, true)}
+							<div
+								className="border-t border-line/60 pe-2 pt-1 text-end text-[11px] tabular-nums text-muted"
+								aria-hidden
+							>
+								<bdi dir="ltr">{`${String(hour).padStart(2, "0")}:00`}</bdi>
+							</div>
 							{dates.map((date, dateIndex) => (
 								<div
 									key={date}
-									className="relative flex min-h-10 flex-col gap-0.5 border border-black/5 p-0.5 dark:border-white/10"
+									className={`flex min-h-9 flex-col gap-0.5 border-s border-t border-line/60 p-0.5 ${
+										date === today ? "bg-accent-wash/40" : ""
+									}`}
 								>
-									{(cells.get(`${dateIndex}-${hour}`) ?? []).map((block, index) => {
-										if (block.kind === "skip") {
-											return (
-												<div
-													key={index}
-													title={`${block.title} — ${t("skipped", { reason: block.reason ?? "" })}`}
-													className="rounded bg-black/10 px-1 py-0.5 text-black/50 dark:bg-white/10 dark:text-white/50"
-												>
-													<div className="truncate">
-														{block.title} {t("skippedShort")}
-													</div>
-													<div className="truncate opacity-70">{block.reason}</div>
-													<span className="sr-only">
-														{t("skipped", { reason: block.reason ?? "" })}
-													</span>
-												</div>
-											);
-										}
-										const busy = block.kind === "busy";
-										return (
-											<div
-												key={index}
-												title={`${block.title} ${block.time}`}
-												className={`rounded px-1 py-0.5 ${
-													busy
-														? "bg-foreground text-background"
-														: "border border-black/20 opacity-50 dark:border-white/30"
-												}`}
-												style={
-													busy
-														? undefined
-														: {
-																backgroundImage:
-																	"repeating-linear-gradient(45deg, currentColor 0 2px, transparent 2px 6px)",
-															}
-												}
-											>
-												<div className="truncate font-medium">{block.title}</div>
-												<div className="truncate opacity-80">{block.time}</div>
-											</div>
-										);
-									})}
+									{perDay[dateIndex]
+										.filter((block) => block.hour === hour)
+										.map((block) => renderBlock(block, "grid"))}
 								</div>
 							))}
-						</BlockFragment>
-						{(markersByHour.get(hour) ?? []).map((marker, index) => (
-							<div
-								key={`${marker.text}-${index}`}
-								style={{ gridColumn: "1 / -1" }}
-								className="border-t border-dashed border-black/40 px-2 py-0.5 text-center text-[10px] opacity-60 dark:border-white/40"
+							{renderMarkers(hour, false)}
+						</Fragment>
+					))}
+				</div>
+
+				{/* Narrow container: one row per day, blocks in time order. */}
+				<ol className="flex flex-col divide-y divide-line rounded-xl border border-line bg-paper-raised @2xl:hidden">
+					{dates.map((date, dateIndex) => {
+						const label = dayLabels(date, locale);
+						const isToday = date === today;
+						return (
+							<li
+								key={date}
+								className={`grid grid-cols-[3rem_minmax(0,1fr)] gap-2 p-2 ${
+									isToday ? "bg-accent-wash/50" : ""
+								}`}
 							>
-								— {marker.text} —
-							</div>
-						))}
-					</Fragment>
-				))}
+								<div className="pt-0.5">
+									<div className="text-xs text-muted">{label.weekday}</div>
+									<div
+										className={`text-lg font-semibold leading-tight tabular-nums ${
+											isToday ? "text-accent-ink" : ""
+										}`}
+									>
+										{label.day}
+									</div>
+								</div>
+								<div className="grid grid-cols-[repeat(auto-fill,minmax(5.5rem,1fr))] gap-1">
+									{perDay[dateIndex].map((block) => renderBlock(block, "list"))}
+								</div>
+							</li>
+						);
+					})}
+				</ol>
 			</div>
 
 			{/* legend */}
-			<ul className="flex flex-wrap items-center gap-3 text-xs">
+			<ul className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted">
 				<li className="flex items-center gap-1.5">
-					<span
-						aria-hidden
-						className="inline-block h-3 w-5 rounded bg-foreground"
-					/>
+					<span aria-hidden className="inline-block h-3 w-5 rounded-sm bg-ink" />
 					{t("legendBusy")}
 				</li>
 				<li className="flex items-center gap-1.5">
 					<span
 						aria-hidden
-						className="inline-block h-3 w-5 rounded border border-current opacity-50"
-						style={{
-							backgroundImage:
-								"repeating-linear-gradient(45deg, currentColor 0 2px, transparent 2px 6px)",
-						}}
+						className="inline-block h-3 w-5 rounded-sm border border-ink/40 text-ink/60"
+						style={{ backgroundImage: HATCH }}
 					/>
 					{t("legendFree")}
 				</li>
 				<li className="flex items-center gap-1.5">
-					<span
-						aria-hidden
-						className="inline-block h-3 w-5 rounded bg-black/10 dark:bg-white/10"
-					/>
+					<span aria-hidden className="inline-block h-3 w-5 rounded-sm bg-wash ring-1 ring-line-strong" />
 					{t("legendSkipped")}
 				</li>
 			</ul>
 
 			<p className="text-sm">
-				{t("eventsWeek", { count: eventCount, countLatin: String(eventCount) })}
-				{" · "}
-				{t("yearEstimate", { count: yearEstimate, countLatin: String(yearEstimate) })}
+				<span className="font-semibold">
+					{t("eventsWeek", { count: eventCount, countLatin: String(eventCount) })}
+				</span>
+				<span className="text-muted">
+					{" · "}
+					{t("yearEstimate", { count: yearEstimate, countLatin: String(yearEstimate) })}
+				</span>
 			</p>
 		</div>
-	);
-}
-
-/** Keeps the time label and its seven day cells on one grid row. */
-function BlockFragment({
-	hour,
-	children,
-}: {
-	hour: number;
-	children: ReactNode;
-}) {
-	return (
-		<>
-			<div
-				className="border-t border-black/5 p-1 text-end tabular-nums opacity-60 dark:border-white/10"
-				aria-hidden
-			>
-				{String(hour).padStart(2, "0")}
-			</div>
-			{children}
-		</>
 	);
 }
