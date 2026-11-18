@@ -66,7 +66,7 @@ export default function Wizard() {
 						href={GITHUB_URL}
 						target="_blank"
 						rel="noopener noreferrer"
-						className="inline-flex min-h-10 items-center px-2 text-muted underline-offset-4 hover:text-ink hover:underline"
+						className="touch-target inline-flex min-h-10 items-center px-2 text-muted underline-offset-4 hover:text-ink hover:underline"
 					>
 						{t("header.github")}
 					</a>

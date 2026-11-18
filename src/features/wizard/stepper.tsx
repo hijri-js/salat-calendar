@@ -36,7 +36,7 @@ export default function Stepper({ active, onSelect, problems }: StepperProps) {
 								onClick={() => onSelect(step)}
 								aria-current={isActive ? "step" : undefined}
 								title={problem}
-								className={`flex min-h-10 items-center gap-2 rounded-full border px-2 text-sm transition-colors sm:px-3 ${
+								className={`touch-tall flex min-h-10 max-w-full items-center gap-2 rounded-full border px-2 text-sm transition-colors sm:px-3 ${
 									isActive
 										? "border-ink bg-ink font-medium text-paper"
 										: "border-line text-ink hover:border-line-strong hover:bg-wash"
@@ -54,7 +54,7 @@ export default function Stepper({ active, onSelect, problems }: StepperProps) {
 								>
 									{index + 1}
 								</span>
-								<span className={isActive ? "truncate" : "sr-only md:not-sr-only"}>
+								<span className={isActive ? "min-w-0 truncate" : "sr-only md:not-sr-only"}>
 									{t(`steps.${step}`)}
 								</span>
 								{problem ? (

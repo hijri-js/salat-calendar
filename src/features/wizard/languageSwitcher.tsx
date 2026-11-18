@@ -34,7 +34,7 @@ export default function LanguageSwitcher() {
 						lang={target}
 						title={ENDONYMS[target].name}
 						aria-current={current ? "true" : undefined}
-						className={`inline-flex min-h-9 min-w-10 items-center justify-center rounded-full px-2 ${
+						className={`touch-target inline-flex min-h-9 min-w-10 items-center justify-center rounded-full px-2 ${
 							current ? "bg-ink font-semibold text-paper" : "text-muted hover:text-ink"
 						}`}
 					>

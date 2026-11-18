@@ -216,3 +216,27 @@
     animation-duration: 0.01ms !important;
   }
 }
+
+/* Touch screens (adapt pass): 44px targets, and 16px form text so iOS
+   Safari does not zoom the page when a field is focused. Unlayered on
+   purpose, so it wins over utilities such as text-sm and min-h-9. Mouse
+   and trackpad users keep the denser 40px layout. */
+@media (pointer: coarse) {
+  input:is([type="text"], [type="search"], [type="number"], [type="time"], :not([type])),
+  select {
+    font-size: max(1rem, 1em);
+    min-block-size: 2.75rem;
+  }
+
+  /* touch-tall: height only, for rows that cannot widen (the stepper). */
+  .btn,
+  .touch-target,
+  .touch-tall {
+    min-block-size: 2.75rem;
+  }
+
+  .btn-icon,
+  .touch-target {
+    min-inline-size: 2.75rem;
+  }
+}

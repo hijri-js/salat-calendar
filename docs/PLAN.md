@@ -795,7 +795,7 @@ flowchart LR
 
 - `next-intl`, RTL layout, stepper with free navigation, six steps, defaults, validity marks, Zustand store, `WeekGrid`, `MiniPreview`, city search, GPS.
 - Also in this PR: engine, fallback and schema fixes; preview API hardening; security headers; CI fixes; UI/UX restyle with native HTML elements and Lucide icons ([ADR 0001](adr/0001-native-ui-over-shadcn.md)).
-- **Check (browser):** `/en` and `/ar`; jump between steps in any order; the "pick a city" reason is visible until a place is set, and the final buttons say "Coming soon" until PR 6 and PR 7 wire them; London + 08:00–16:00 hides Maghrib in June and shows it in December; "No Friday slot" removes Friday Dhuhr; keyboard-only pass; phone width has no sideways scroll.
+- **Check (browser):** `/en` and `/ar`; jump between steps in any order; the "pick a city" reason is visible until a place is set, and the final buttons say "Coming soon" until PR 6 and PR 7 wire them; London + 08:00–16:00 with offset 0 hides Maghrib in June (21:20) and shows it in December (15:52) — with the default +15 min offset December Maghrib starts at 16:07 and is correctly skipped too; "No Friday slot" removes Friday Dhuhr; keyboard-only pass; phone width has no sideways scroll.
 
 ### PR 6: `.ics` download
 
