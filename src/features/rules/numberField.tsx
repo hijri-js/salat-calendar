@@ -33,7 +33,14 @@ export default function NumberField({
 	// null = not editing: show the stored value.
 	const [draft, setDraft] = useState<string | null>(null);
 
-	const finish = () => {
+	// Blur and Enter end an edit the same way.
+	const finish = (input: HTMLInputElement) => {
+		if (input.validity.badInput) {
+			// Junk ("-", "1e"): keep the stored value and put it back in the field.
+			input.value = value === undefined ? "" : String(value);
+			setDraft(null);
+			return;
+		}
 		if (draft === null) {
 			return;
 		}
@@ -74,19 +81,12 @@ export default function NumberField({
 				}
 			}}
 			onBlur={(event) => {
-				if (event.target.validity.badInput) {
-					// Junk: keep the stored value and put it back in the field.
-					event.target.value = value === undefined ? "" : String(value);
-					setDraft(null);
-					onBlur?.(event);
-					return;
-				}
-				finish();
+				finish(event.currentTarget);
 				onBlur?.(event);
 			}}
 			onKeyDown={(event) => {
 				if (event.key === "Enter") {
-					finish();
+					finish(event.currentTarget);
 				}
 				onKeyDown?.(event);
 			}}
