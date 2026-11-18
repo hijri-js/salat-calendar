@@ -5,4 +5,6 @@ allowBuilds:
   unrs-resolver: false
 auditConfig:
   ignoreGhsas:
+    # picomatch ReDoS, dev-only tooling, no patched release (2026-11-17).
+    # Remove when Dependabot offers a fix.
     - GHSA-fc5q-39xc-vjpf
