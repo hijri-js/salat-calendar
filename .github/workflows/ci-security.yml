@@ -58,3 +58,7 @@ jobs:
         run: pnpm lint
       - name: Vitest
         run: pnpm test
+      # Prerender errors (e.g. reading the clock in the static shell) only
+      # surface in a production build, not in tsc or tests.
+      - name: Build
+        run: pnpm build
