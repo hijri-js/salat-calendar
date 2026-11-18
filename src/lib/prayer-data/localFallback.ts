@@ -3,9 +3,10 @@
  * is unreachable or rate-limited (plan §2, §4.9). Results are flagged
  * `source: "local"` and are never cached (plan §4.9).
  *
- * Verified in Step 0 prep: adhan-js returns `Date`s whose UTC components are
- * the wall-clock time at the coordinates, independent of the runtime
- * timezone — so slicing `toISOString()` is the correct formatting.
+ * adhan-js returns real instants (`Date`s in UTC). Each one is formatted as a
+ * wall-clock time in the place's IANA timezone, so DST and the UTC offset are
+ * applied. Unsupported method ids throw rather than silently computing with a
+ * different method (tests: Cairo July, London June, Auckland).
  */
 
 import * as adhanModule from "adhan";
@@ -54,8 +55,17 @@ export function computeLocalMonthTimings(params: {
 	month: number;
 	timezone: string;
 }): DayTimings[] {
-	const factory = METHOD_FACTORIES[params.method] ?? adhan.CalculationMethod.MuslimWorldLeague;
+	const factory = METHOD_FACTORIES[params.method];
+	if (!factory) {
+		throw new Error(`Local fallback cannot reproduce calculation method ${params.method}`);
+	}
 	const calculationParams = factory();
+	const clock = new Intl.DateTimeFormat("en-GB", {
+		timeZone: params.timezone,
+		hour: "2-digit",
+		minute: "2-digit",
+		hourCycle: "h23",
+	});
 	calculationParams.madhab = params.school === "hanafi" ? adhan.Madhab.Hanafi : adhan.Madhab.Shafi;
 	// AlAdhan uses angle-based twilight adjustment at high latitudes; adhan-js
 	// defaults to MiddleOfTheNight, which diverges by hours in e.g. London June
@@ -67,7 +77,8 @@ export function computeLocalMonthTimings(params: {
 	for (let day = 1; day <= daysInMonth(params.year, params.month); day += 1) {
 		// adhan-js reads the Date's local calendar components; local-midnight
 		// construction is canonical and yields identical results under any
-		// runtime timezone (verified in prep).
+		// runtime timezone (tests pass under TZ=UTC, America/Los_Angeles and
+		// Pacific/Kiritimati).
 		const date = new Date(params.year, params.month - 1, day);
 		const times = new adhan.PrayerTimes(coordinates, date, calculationParams);
 		const clockTimes = {} as Record<Prayer, string>;
@@ -78,7 +89,7 @@ export function computeLocalMonthTimings(params: {
 			if (!(at instanceof Date) || Number.isNaN(at.getTime())) {
 				throw new Error(`adhan could not compute ${prayer} for ${params.year}-${params.month}-${day}`);
 			}
-			clockTimes[prayer] = at.toISOString().slice(11, 16);
+			clockTimes[prayer] = clock.format(at);
 		}
 		days.push({
 			date: `${params.year}-${String(params.month).padStart(2, "0")}-${String(day).padStart(2, "0")}`,

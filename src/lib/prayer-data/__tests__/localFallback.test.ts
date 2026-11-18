@@ -51,6 +51,27 @@ describe("computeLocalMonthTimings", () => {
 		expect(days[14]!.times).toEqual({ fajr: "05:21", dhuhr: "11:46", asr: "13:48", maghrib: "16:11", isha: "18:02" });
 	});
 
+	it("returns local wall-clock times, not UTC, for a UTC+3 city (Cairo, July)", () => {
+		const days = computeLocalMonthTimings({
+			latitude: 30.04, longitude: 31.24, method: 5, school: "standard", year: 2026, month: 7, timezone: "Africa/Cairo",
+		});
+		expect(days[0]!.times).toEqual({ fajr: "04:12", dhuhr: "13:00", asr: "16:35", maghrib: "20:00", isha: "21:33" });
+	});
+
+	it("returns British Summer Time in June, not UTC (London, 21 June)", () => {
+		const days = computeLocalMonthTimings({
+			latitude: 51.5, longitude: -0.12, method: 3, school: "standard", year: 2026, month: 6, timezone: "Europe/London",
+		});
+		expect(days[20]!.times).toEqual({ fajr: "02:31", dhuhr: "13:03", asr: "17:25", maghrib: "21:22", isha: "23:27" });
+	});
+
+	it("handles a far-east timezone (Auckland, UTC+13)", () => {
+		const days = computeLocalMonthTimings({
+			latitude: -36.85, longitude: 174.76, method: 3, school: "standard", year: 2026, month: 11, timezone: "Pacific/Auckland",
+		});
+		expect(days[14]!.times.dhuhr).toBe("13:06");
+	});
+
 	it("handles February in a leap year", () => {
 		const days = computeLocalMonthTimings({
 			latitude: 51.5,
@@ -75,14 +96,12 @@ describe("computeLocalMonthTimings", () => {
 		expect(timeOf(standard[0]!, "asr") < timeOf(hanafi[0]!, "asr")).toBe(true);
 	});
 
-	it("falls back to Muslim World League for unsupported method ids", () => {
-		const unsupported = computeLocalMonthTimings({
-			latitude: 51.5, longitude: -0.12, method: 999, school: "standard", year: 2026, month: 11, timezone: "Europe/London",
-		});
-		const mwl = computeLocalMonthTimings({
-			latitude: 51.5, longitude: -0.12, method: 3, school: "standard", year: 2026, month: 11, timezone: "Europe/London",
-		});
-		expect(unsupported).toEqual(mwl);
+	it("refuses method ids it cannot reproduce instead of silently using another method", () => {
+		expect(() =>
+			computeLocalMonthTimings({
+				latitude: 51.5, longitude: -0.12, method: 999, school: "standard", year: 2026, month: 11, timezone: "Europe/London",
+			}),
+		).toThrow(/method 999/);
 	});
 
 	it("reports the supported method ids", () => {
