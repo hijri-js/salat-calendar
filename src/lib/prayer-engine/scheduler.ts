@@ -153,16 +153,16 @@ export function planDay(timings: DayTimings, config: SyncConfig, oooEvents: OooE
 
 		start = roundToGrid(start, config.rounding.grid, config.rounding.direction);
 
+		const startLocal = toLocalIso(date, start);
 		if (!isWithinWindow(start, config.window)) {
-			skipped.push({ date, prayer, reason: "outside-window" });
+			skipped.push({ date, prayer, reason: "outside-window", startLocal });
 			continue;
 		}
 
-		const startLocal = toLocalIso(date, start);
 		const endLocal = toLocalIso(date, start + duration);
 
 		if (config.ooo.enabled && isExcludedByOoo(oooEvents, config.ooo.keywords, startLocal, endLocal)) {
-			skipped.push({ date, prayer, reason: "ooo" });
+			skipped.push({ date, prayer, reason: "ooo", startLocal });
 			continue;
 		}
 

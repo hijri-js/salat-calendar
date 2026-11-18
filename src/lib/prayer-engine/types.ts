@@ -158,6 +158,13 @@ export interface Skipped {
 	date: string;
 	prayer: Prayer;
 	reason: SkipReason;
+	/**
+	 * Where the event would have started ("YYYY-MM-DDTHH:MM", like `PlannedEvent.startLocal`), after the
+	 * offset, Jummah rule and rounding. Present only for skips decided after
+	 * that point (`outside-window`, `ooo`), so the preview can draw the slot
+	 * where it would have been.
+	 */
+	startLocal?: string;
 }
 
 /** Everything the engine decided for one day. */
