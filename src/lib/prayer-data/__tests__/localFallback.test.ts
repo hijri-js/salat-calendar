@@ -104,8 +104,26 @@ describe("computeLocalMonthTimings", () => {
 		).toThrow(/method 999/);
 	});
 
-	it("reports the supported method ids", () => {
-		expect(supportedLocalMethods()).toContain(3);
+	it("reports the supported method ids: every method the UI offers", () => {
+		// Mirrors CALCULATION_METHOD_IDS in the location feature (lib must not
+		// import features); a fallback gap would turn an AlAdhan outage into a 502.
+		expect(supportedLocalMethods()).toEqual([1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
 		expect(supportedLocalMethods()).not.toContain(999);
+	});
+
+	it("Gulf Region (8) puts Isha 90 minutes after Maghrib, like AlAdhan", () => {
+		const [day] = computeLocalMonthTimings({
+			latitude: 25.2, longitude: 55.27, method: 8, school: "standard", year: 2026, month: 11, timezone: "Asia/Dubai",
+		});
+		const toMin = (hhmm: string) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5));
+		expect(toMin(day!.times.isha!) - toMin(day!.times.maghrib!)).toBe(90);
+	});
+
+	it("France (12) and Russia (14) use their own Fajr angles (12° and 16°)", () => {
+		const base = { latitude: 48.85, longitude: 2.35, school: "standard" as const, year: 2026, month: 11, timezone: "Europe/Paris" };
+		const [france] = computeLocalMonthTimings({ ...base, method: 12 });
+		const [russia] = computeLocalMonthTimings({ ...base, method: 14 });
+		// A smaller depression angle means a later Fajr.
+		expect(france!.times.fajr! > russia!.times.fajr!).toBe(true);
 	});
 });

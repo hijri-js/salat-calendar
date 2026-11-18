@@ -10,7 +10,7 @@
 
 import type { DayTimings } from "@/lib/prayer-engine/types";
 import { ApiError, fetchMonthRaw } from "./aladhan";
-import { cacheKey, TIMINGS_TTL_SECONDS, type TimingsCache } from "./cache";
+import { cacheKey, roundCoord, TIMINGS_TTL_SECONDS, type TimingsCache } from "./cache";
 import { computeLocalMonthTimings } from "./localFallback";
 import { normalizeMonth } from "./normalize";
 
@@ -46,11 +46,6 @@ let aladhanPausedUntil = 0;
 /** Test helper: clear the rate-limit pause between tests. */
 export function resetRateLimitPauseForTest(): void {
 	aladhanPausedUntil = 0;
-}
-
-/** Round to 2 decimals (~1 km) so upstream calls match the cache key. */
-function round2(value: number): number {
-	return Math.round(value * 100) / 100;
 }
 
 /** Days between two inclusive "YYYY-MM-DD" dates. */
@@ -95,8 +90,8 @@ export async function getTimingsForRange(
 	}
 
 	const now = deps.now ?? Date.now;
-	const latitude = round2(request.latitude);
-	const longitude = round2(request.longitude);
+	const latitude = roundCoord(request.latitude);
+	const longitude = roundCoord(request.longitude);
 	const days: DayTimings[] = [];
 	for (const { year, month } of listMonths(request.from, request.to)) {
 		const key = cacheKey({ ...request, year, month });
