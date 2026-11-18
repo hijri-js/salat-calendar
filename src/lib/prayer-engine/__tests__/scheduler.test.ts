@@ -179,8 +179,9 @@ describe("planDay: midnight crossings", () => {
 		const isha = plan.events[4];
 		expect(isha.startLocal).toBe("2026-11-16T00:05");
 		expect(isha.endLocal).toBe("2026-11-16T00:25");
-		// The id follows the event's own date (plan §4.5).
-		expect(isha.id).toBe("sc20261116p4");
+		// The id follows the prayer's own (source) date, not the shifted one,
+		// so two days crossing midnight can never share an id.
+		expect(isha.id).toBe("sc20261115p4");
 	});
 
 	it("moves a Fajr event to the previous date for a negative offset", () => {
@@ -193,7 +194,43 @@ describe("planDay: midnight crossings", () => {
 		const fajr = plan.events[0];
 		expect(fajr.startLocal).toBe("2026-11-14T23:50");
 		expect(fajr.endLocal).toBe("2026-11-15T00:10");
-		expect(fajr.id).toBe("sc20261114p0");
+		expect(fajr.id).toBe("sc20261115p0");
+	});
+});
+
+describe("event ids are unique across a midnight crossing", () => {
+	it("gives two consecutive Ishas different ids when only the first crosses midnight", () => {
+		// +10: day 1 Isha 23:51 -> day 2 00:01; day 2 Isha 23:49 -> day 2 23:59.
+		const config = makeConfig({ defaults: { offsetMin: 10, durationMin: 20, transparency: "opaque" } });
+		const plans = planRange(
+			[makeTimings("2026-06-20", { isha: "23:51" }), makeTimings("2026-06-21", { isha: "23:49" })],
+			config,
+		);
+		const first = plans[0].events.find((e) => e.prayer === "isha");
+		const second = plans[1].events.find((e) => e.prayer === "isha");
+		expect(first?.startLocal).toBe("2026-06-21T00:01");
+		expect(second?.startLocal).toBe("2026-06-21T23:59");
+		expect(first?.id).not.toBe(second?.id);
+		expect(first?.id).toBe("sc20260620p4");
+		expect(second?.id).toBe("sc20260621p4");
+	});
+
+	it("never excludes anything when there are no out-of-office spans", () => {
+		expect(isExcludedByOoo([], ["OOO"], "2026-06-21T00:01", "2026-06-21T00:21")).toBe(false);
+	});
+
+	it("checks out-of-office spans on the date the event actually lands", () => {
+		// Isha on 20 Jun is pushed to 21 Jun 00:01; 21 Jun is an all-day vacation.
+		const config = makeConfig({
+			defaults: { offsetMin: 10, durationMin: 20, transparency: "opaque" },
+			ooo: { enabled: true, keywords: [] },
+		});
+		const oooByDate = new Map([
+			["2026-06-21", [{ startLocal: "2026-06-21T00:00", endLocal: "2026-06-21T23:59", allDay: true }]],
+		]);
+		const [plan] = planRange([makeTimings("2026-06-20", { isha: "23:51" })], config, oooByDate);
+		expect(plan.events.find((e) => e.prayer === "isha")).toBeUndefined();
+		expect(plan.skipped).toContainEqual({ date: "2026-06-20", prayer: "isha", reason: "ooo" });
 	});
 });
 

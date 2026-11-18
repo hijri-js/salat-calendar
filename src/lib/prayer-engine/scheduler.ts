@@ -17,6 +17,7 @@ import {
 	type SyncConfig,
 } from "./types";
 import {
+	addDays,
 	applyOffset,
 	isWithinWindow,
 	localIsoToMinutes,
@@ -166,7 +167,9 @@ export function planDay(timings: DayTimings, config: SyncConfig, oooEvents: OooE
 		}
 
 		events.push({
-			id: `sc${startLocal.slice(0, 10).replaceAll("-", "")}p${prayerIndex(prayer)}`,
+			// Built from the prayer's own date, not the (possibly shifted) start
+			// date: two days that cross midnight must never share an id.
+			id: `sc${date.replaceAll("-", "")}p${prayerIndex(prayer)}`,
 			prayer,
 			startLocal,
 			endLocal,
@@ -181,11 +184,20 @@ export function planDay(timings: DayTimings, config: SyncConfig, oooEvents: OooE
 	return { date, events, skipped };
 }
 
-/** Chain `planDay` across a range, with per-date out-of-office spans. */
+/**
+ * Chain `planDay` across a range, with per-date out-of-office spans. An offset
+ * can move an event onto the previous or next date, so each day also sees the
+ * spans of its neighbours (the overlap check works on absolute minutes).
+ */
 export function planRange(
 	days: DayTimings[],
 	config: SyncConfig,
 	oooByDate?: Map<string, OooEvent[]>,
 ): DayPlan[] {
-	return days.map((timings) => planDay(timings, config, oooByDate?.get(timings.date) ?? []));
+	return days.map((timings) => {
+		const spans = oooByDate
+			? [-1, 0, 1].flatMap((n) => oooByDate.get(addDays(timings.date, n)) ?? [])
+			: [];
+		return planDay(timings, config, spans);
+	});
 }
