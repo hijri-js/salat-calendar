@@ -218,9 +218,11 @@ export default function StepTiming({ onBack, onNext }: StepTimingProps) {
 							</label>
 							<NumberField
 								id="jummah-fixed-duration"
-								value={jummah.durationMin ?? 60}
+								value={jummah.durationMin}
+								optional
+								placeholder={String(defaults.durationMin)}
 								bounds={DURATION_BOUNDS}
-								onCommit={(next) => next !== undefined && updateJummah({ durationMin: next })}
+								onCommit={(next) => updateJummah({ durationMin: next })}
 								className="w-20 px-2 py-1"
 							/>
 						</div>
@@ -243,9 +245,11 @@ export default function StepTiming({ onBack, onNext }: StepTimingProps) {
 							</label>
 							<NumberField
 								id="jummah-custom-offset"
-								value={jummah.offsetMin ?? 0}
+								value={jummah.offsetMin}
+								optional
+								placeholder={String(defaults.offsetMin)}
 								bounds={OFFSET_BOUNDS}
-								onCommit={(next) => next !== undefined && updateJummah({ offsetMin: next })}
+								onCommit={(next) => updateJummah({ offsetMin: next })}
 								className="w-20 px-2 py-1"
 							/>
 							<label htmlFor="jummah-custom-duration">
@@ -253,9 +257,11 @@ export default function StepTiming({ onBack, onNext }: StepTimingProps) {
 							</label>
 							<NumberField
 								id="jummah-custom-duration"
-								value={jummah.durationMin ?? 45}
+								value={jummah.durationMin}
+								optional
+								placeholder={String(defaults.durationMin)}
 								bounds={DURATION_BOUNDS}
-								onCommit={(next) => next !== undefined && updateJummah({ durationMin: next })}
+								onCommit={(next) => updateJummah({ durationMin: next })}
 								className="w-20 px-2 py-1"
 							/>
 						</div>

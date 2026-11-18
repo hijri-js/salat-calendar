@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { supportedLocalMethods } from "@/lib/prayer-data/localFallback";
 import {
 	CALCULATION_METHOD_IDS,
 	methodName,
@@ -65,5 +66,14 @@ describe("methodName", () => {
 		expect(methodName(4, "ar")).toBe("جامعة أم القرى، مكة المكرمة");
 		expect(methodName(16, "en")).toBe("Dubai (experimental)");
 		expect(methodName(16, "ar")).toBe("دبي (تجريبي)");
+	});
+});
+
+describe("offered methods and the local fallback", () => {
+	it("every method the UI offers can be computed locally when AlAdhan is down", () => {
+		const local = supportedLocalMethods();
+		for (const id of CALCULATION_METHOD_IDS) {
+			expect(local).toContain(id);
+		}
 	});
 });

@@ -94,7 +94,8 @@ describe("CacheApiTimingsCache", () => {
 describe("roundCoord and cacheKey agree", () => {
 	it("rounds negative halves the same way in the key and the request", () => {
 		const key = cacheKey({ latitude: -0.125, longitude: 51.505, method: 3, school: "standard", year: 2026, month: 11 });
-		expect(key).toContain(`:${roundCoord(-0.125).toFixed(2)}:`);
-		expect(key).toContain(`:${roundCoord(51.505).toFixed(2)}:`);
+		// toFixed alone would give "-0.13"; the request uses roundCoord (-0.12).
+		expect(roundCoord(-0.125)).toBe(-0.12);
+		expect(key).toBe("salat-cal:v1:-0.12:51.51:3:standard:2026-11");
 	});
 });

@@ -13,10 +13,12 @@ import { useSyncExternalStore } from "react";
 
 import { todayIso } from "./week";
 
-// The date only matters at mount; a tab left open past midnight keeps the
-// day it opened on, like the rest of the preview.
+// Read once per page load: a tab left open past midnight keeps the day it
+// opened on, so the side preview and the week view never disagree.
+let today: string | null = null;
+const readToday = () => (today ??= todayIso());
 const subscribe = () => () => {};
 
 export function useToday(): string | null {
-	return useSyncExternalStore(subscribe, todayIso, () => null);
+	return useSyncExternalStore(subscribe, readToday, () => null);
 }

@@ -312,7 +312,9 @@ export default function StepPlace({ onNext }: StepPlaceProps) {
 					</option>
 				))}
 			</select>
-			{chosenCountry !== null && chosenCountry.name !== "" ? (
+			{chosenCountry !== null &&
+			chosenCountry.name !== "" &&
+			method === suggestMethod(chosenCountry.code) ? (
 				<p className="text-xs text-muted">
 					{t("suggestedFor", { country: chosenCountry.name })}
 				</p>

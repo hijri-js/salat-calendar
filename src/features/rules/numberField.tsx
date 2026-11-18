@@ -48,12 +48,24 @@ export default function NumberField({
 		<input
 			{...rest}
 			type="number"
-			inputMode="numeric"
+			// iOS's numeric keypad has no minus key; signed fields keep the
+			// full keyboard so offsets before the adhan can be typed.
+			inputMode={bounds.min < 0 ? undefined : "numeric"}
 			step={1}
 			min={bounds.min}
 			max={bounds.max}
 			value={draft ?? (value === undefined ? "" : String(value))}
 			onChange={(event) => {
+				// Half-typed text ("-", "1e") reads as "" with badInput set; that
+				// is not "empty", so commit nothing. The draft still has to change:
+				// a controlled input whose onChange sets no state is reset to the
+				// stored value, and the next digit lands after it ("15" + "-10").
+				// "" equals the input's own .value here, so React leaves the
+				// visible "-" alone.
+				if (event.target.validity.badInput) {
+					setDraft("");
+					return;
+				}
 				const raw = event.target.value;
 				setDraft(raw);
 				const live = liveValue(raw, bounds, optional);
@@ -62,6 +74,13 @@ export default function NumberField({
 				}
 			}}
 			onBlur={(event) => {
+				if (event.target.validity.badInput) {
+					// Junk: keep the stored value and put it back in the field.
+					event.target.value = value === undefined ? "" : String(value);
+					setDraft(null);
+					onBlur?.(event);
+					return;
+				}
 				finish();
 				onBlur?.(event);
 			}}

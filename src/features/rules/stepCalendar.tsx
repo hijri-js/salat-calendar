@@ -176,7 +176,7 @@ export default function StepCalendar({ onBack, onNext }: StepCalendarProps) {
 					value={keyword}
 					onChange={(event) => setKeyword(event.target.value)}
 					placeholder={t("keywordPlaceholder")}
-					className="rounded-lg border border-line-strong px-2 py-1.5 text-sm"
+					className="min-w-0 max-w-64 flex-1 rounded-lg border border-line-strong px-2 py-1.5 text-sm"
 				/>
 				<button
 					type="submit"
