@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { cacheKey, CacheApiTimingsCache, MemoryTimingsCache, TIMINGS_TTL_SECONDS } from "../cache";
+import { cacheKey, CacheApiTimingsCache, MemoryTimingsCache, TIMINGS_TTL_SECONDS } from "@/lib/prayer-data/cache";
 import type { DayTimings } from "@/lib/prayer-engine/types";
 
 const value: DayTimings[] = [

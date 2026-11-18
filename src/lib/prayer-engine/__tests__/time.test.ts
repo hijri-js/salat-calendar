@@ -12,7 +12,7 @@ import {
 	toLocalIso,
 	weekdayOf,
 	withinDay,
-} from "../time";
+} from "@/lib/prayer-engine/time";
 
 describe("parseTime", () => {
 	it("parses HH:MM", () => {

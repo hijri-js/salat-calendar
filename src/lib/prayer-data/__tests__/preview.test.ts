@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { DayTimings } from "@/lib/prayer-engine/types";
-import { ApiError } from "../aladhan";
-import { MemoryTimingsCache, TIMINGS_TTL_SECONDS } from "../cache";
+import { ApiError } from "@/lib/prayer-data/aladhan";
+import { MemoryTimingsCache, TIMINGS_TTL_SECONDS } from "@/lib/prayer-data/cache";
 import {
 	daysBetweenInclusive,
 	getTimingsForRange,
@@ -10,7 +10,7 @@ import {
 	PREVIEW_MAX_DAYS,
 	RATE_LIMIT_PAUSE_MS,
 	resetRateLimitPauseForTest,
-} from "../preview";
+} from "@/lib/prayer-data/preview";
 
 afterEach(() => {
 	resetRateLimitPauseForTest();
@@ -126,7 +126,7 @@ describe("getTimingsForRange", () => {
 	});
 
 	it("sends coordinates rounded to 2 decimals, matching the cache key", async () => {
-		const fetchMonth = vi.fn(async (_params: { latitude: number; longitude: number }) => ({}));
+		const fetchMonth = vi.fn<(params: { latitude: number; longitude: number }) => Promise<unknown>>(async () => ({}));
 		const normalize = vi.fn(() => makeDays(2026, 11, 30));
 		await getTimingsForRange(
 			{ ...request, latitude: 51.507351, longitude: -0.127758 },

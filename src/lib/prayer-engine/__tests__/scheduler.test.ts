@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import type { DayTimings, OooEvent, PrayerRule, SyncConfig } from "../types";
-import { isExcludedByOoo, planDay, planRange, resolveJummah } from "../scheduler";
+import type { DayTimings, OooEvent, PrayerRule, SyncConfig } from "@/lib/prayer-engine/types";
+import { isExcludedByOoo, planDay, planRange, resolveJummah } from "@/lib/prayer-engine/scheduler";
 
 const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6] as SyncConfig["days"];
 

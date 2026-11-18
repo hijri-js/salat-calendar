@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { resetTimingsCacheForTest } from "@/lib/prayer-data/cache";
 import { resetRateLimitPauseForTest } from "@/lib/prayer-data/preview";
-import { POST } from "../route";
+import { POST } from "@/app/api/prayers/preview/route";
 
 const validBody = {
 	latitude: 51.5,

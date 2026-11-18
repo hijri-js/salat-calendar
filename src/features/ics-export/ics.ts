@@ -166,7 +166,7 @@ function eventLines(event: PlannedEvent, now: Date): string[] {
 			"BEGIN:VALARM",
 			"ACTION:DISPLAY",
 			// RFC 5545 §3.6.6: DESCRIPTION is REQUIRED for ACTION:DISPLAY.
-			`DESCRIPTION:${escapeText(event.title)}`,
+			...foldLine(`DESCRIPTION:${escapeText(event.title)}`).split("\r\n"),
 			`TRIGGER:-PT${event.reminderMin}M`,
 			"END:VALARM",
 		);

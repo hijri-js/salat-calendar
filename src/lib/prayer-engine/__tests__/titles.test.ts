@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatTitle } from "../titles";
+import { formatTitle } from "@/lib/prayer-engine/titles";
 
 describe("formatTitle", () => {
 	it("uses the locale name by default", () => {
