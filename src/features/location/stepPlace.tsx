@@ -59,6 +59,9 @@ export default function StepPlace({ onNext }: StepPlaceProps) {
 		code: string;
 		name: string;
 	} | null>(null);
+	// True once the user picked a method by hand; until then a city pick
+	// applies its country's suggested method.
+	const [methodTouched, setMethodTouched] = useState(false);
 	// True once the device GPS flow set the place (device timezone hint).
 	const [usedGps, setUsedGps] = useState(false);
 
@@ -81,6 +84,9 @@ export default function StepPlace({ onNext }: StepPlaceProps) {
 		});
 		// The country (name + code) feeds the "suggested for …" hint.
 		setChosenCountry({ code: city.countryCode, name: city.country });
+		if (!methodTouched) {
+			setMethod(suggestMethod(city.countryCode));
+		}
 		// A manual pick replaces the device timezone with the city's own.
 		setUsedGps(false);
 		setQuery("");
@@ -299,7 +305,10 @@ export default function StepPlace({ onNext }: StepPlaceProps) {
 			<select
 				id="method-input"
 				value={method}
-				onChange={(event) => setMethod(Number(event.target.value))}
+				onChange={(event) => {
+					setMethodTouched(true);
+					setMethod(Number(event.target.value));
+				}}
 				className="rounded-lg border border-line-strong px-3 py-2"
 			>
 				{methodOrder.map((id) => (
