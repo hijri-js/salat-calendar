@@ -179,7 +179,7 @@ export default function WeekGrid({
 				<div
 					key={marker.text}
 					style={{ gridColumn: "1 / -1" }}
-					className="flex items-center gap-2 px-2 py-0.5 text-[11px] text-accent-ink"
+					className="flex items-center gap-2 px-2 py-0.5 text-[0.6875rem] text-accent-ink"
 				>
 					<span aria-hidden className="flex-1 border-t border-dashed border-accent" />
 					<span>{marker.text}</span>
@@ -189,7 +189,7 @@ export default function WeekGrid({
 
 	// `view` keeps popover ids unique: both layouts are in the DOM.
 	const renderBlock = (block: Block, view: "grid" | "list") => {
-		const size = view === "grid" ? "text-[11px]" : "text-xs";
+		const size = view === "grid" ? "text-[0.6875rem]" : "text-xs";
 		if (block.kind === "skip") {
 			const popoverId = `${idBase}-${view}-${block.key}`;
 			// Explicit anchor (a valid dashed ident) where anchor positioning
@@ -291,7 +291,7 @@ export default function WeekGrid({
 						<Fragment key={hour}>
 							{renderMarkers(hour, true)}
 							<div
-								className="border-t border-line/60 pe-2 pt-1 text-end text-[11px] tabular-nums text-muted"
+								className="border-t border-line/60 pe-2 pt-1 text-end text-[0.6875rem] tabular-nums text-muted"
 								aria-hidden
 							>
 								<bdi dir="ltr">{`${String(hour).padStart(2, "0")}:00`}</bdi>

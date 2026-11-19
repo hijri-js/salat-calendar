@@ -77,7 +77,7 @@
   }
 
   /* Arabic: Plex Sans Arabic for text, Amiri for display. */
-  [dir="rtl"] body {
+  :lang(ar) body {
     font-family: var(--font-plex-arabic), var(--font-plex), ui-sans-serif, system-ui, sans-serif;
   }
 
@@ -90,7 +90,7 @@
     text-wrap: balance;
   }
 
-  [dir="rtl"] :is(h1, h2, h3) {
+  :lang(ar) :is(h1, h2, h3) {
     font-family: var(--font-amiri), var(--font-fraunces), ui-serif, serif;
     font-weight: 700;
     letter-spacing: 0;
@@ -155,8 +155,11 @@
       border-color 160ms cubic-bezier(0.25, 1, 0.5, 1);
   }
 
-  .btn:hover:not(:disabled) {
-    background: var(--wash);
+  /* Hover only where hover exists, so a tap does not leave it stuck. */
+  @media (hover: hover) {
+    .btn:hover:not(:disabled) {
+      background: var(--wash);
+    }
   }
 
   .btn-primary {
@@ -165,8 +168,10 @@
     color: var(--paper);
   }
 
-  .btn-primary:hover:not(:disabled) {
-    background: color-mix(in oklch, var(--ink) 85%, var(--accent));
+  @media (hover: hover) {
+    .btn-primary:hover:not(:disabled) {
+      background: color-mix(in oklch, var(--ink) 85%, var(--accent));
+    }
   }
 
   .btn:disabled {
@@ -189,7 +194,7 @@
     color: var(--muted);
   }
 
-  [dir="rtl"] .eyebrow {
+  :lang(ar) .eyebrow {
     letter-spacing: 0;
   }
 }

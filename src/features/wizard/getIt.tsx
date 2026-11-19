@@ -35,7 +35,7 @@ export default function GetIt({ onBack }: { onBack?: () => void }) {
 				</p>
 			)}
 
-			<div className="grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2">
+			<div className="grid gap-px overflow-hidden rounded-2xl border border-line bg-line grid-cols-[repeat(auto-fit,minmax(min(100%,18rem),1fr))]">
 				<article className="flex flex-col gap-3 bg-paper-raised p-5">
 					<h3 className="text-lg">{t("syncHeading")}</h3>
 					<p className="text-sm text-muted">{t("syncBody")}</p>
