@@ -1,0 +1,91 @@
+"use client";
+
+/**
+ * The .ics download flow (plan §4.10): fetch a rolling year of timings one
+ * month at a time from the cached preview API, run the engine in the
+ * browser, build the file and hand it to the browser as a download.
+ *
+ * Months are fetched one after another: each request matches one cached
+ * AlAdhan month on the server, stays inside the Worker's per-request limits
+ * (plan §4.6), and lets the card show progress. No login, no Google.
+ */
+import { useCallback, useEffect, useRef, useState } from "react";
+
+import { buildPreviewBody, fetchPreview } from "@/features/preview";
+import type { DayTimings, SyncConfig } from "@/lib/prayer-engine/types";
+
+import { buildYearIcs, icsFileName, monthChunks, todayIn, yearRange } from "./icsFile";
+
+export type IcsDownloadState =
+	| { status: "idle" }
+	| { status: "working"; done: number; total: number }
+	| { status: "done"; eventCount: number; fileName: string; usedLocal: boolean; from: string; to: string }
+	| { status: "error" };
+
+/** Hand a text file to the browser as a download. */
+function saveFile(text: string, fileName: string): void {
+	const url = URL.createObjectURL(new Blob([text], { type: "text/calendar;charset=utf-8" }));
+	const link = document.createElement("a");
+	link.href = url;
+	link.download = fileName;
+	link.hidden = true;
+	document.body.append(link);
+	link.click();
+	link.remove();
+	// Revoke after the click has been handled; revoking at once can cancel
+	// the download in some browsers.
+	setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+export function useIcsDownload(config: SyncConfig) {
+	const [state, setState] = useState<IcsDownloadState>({ status: "idle" });
+	const controller = useRef<AbortController | null>(null);
+
+	// Leaving the step cancels a download in progress.
+	useEffect(() => () => controller.current?.abort(), []);
+
+	const start = useCallback(async () => {
+		const timeZone = config.location.timezone;
+		// A second click while working is ignored (the button stays focusable).
+		if (controller.current !== null || timeZone === undefined || timeZone === "") {
+			return;
+		}
+		const abort = new AbortController();
+		controller.current = abort;
+
+		const { from, to } = yearRange(todayIn(timeZone));
+		const chunks = monthChunks(from, to);
+		setState({ status: "working", done: 0, total: chunks.length });
+
+		try {
+			const timings: DayTimings[] = [];
+			for (const [index, chunk] of chunks.entries()) {
+				const body = buildPreviewBody(config, chunk.from, chunk.to);
+				if (body === null) {
+					throw new Error("Download request is not valid");
+				}
+				timings.push(...(await fetchPreview(body, abort.signal)));
+				setState({ status: "working", done: index + 1, total: chunks.length });
+			}
+			const result = buildYearIcs(timings, config, { calendarName: "Salat" });
+			const fileName = icsFileName(config.location.label, from);
+			saveFile(result.text, fileName);
+			setState({
+				status: "done",
+				eventCount: result.eventCount,
+				fileName,
+				usedLocal: result.usedLocal,
+				from,
+				to,
+			});
+		} catch {
+			if (!abort.signal.aborted) {
+				setState({ status: "error" });
+			}
+		} finally {
+			controller.current = null;
+		}
+	}, [config]);
+
+	return { state, start };
+}

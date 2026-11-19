@@ -3,12 +3,13 @@
 /**
  * The "Get it" step (plan §6): the Google sync and the .ics download. Until
  * a place is set, the reason is shown next to the buttons, not only to
- * screen readers. Neither action is wired yet (PR 6 / PR 7), so both
- * buttons stay disabled and say "Coming soon" rather than doing nothing.
+ * screen readers. The .ics download works (PR 6); Google sync is not wired
+ * yet (PR 7), so its button stays disabled and says "Coming soon".
  */
 import { useTranslations } from "next-intl";
-import { CalendarSync, Download } from "lucide-react";
+import { CalendarSync } from "lucide-react";
 
+import { DownloadCard } from "@/features/ics-export";
 import { NavButtons } from "@/features/rules";
 
 import { selectPlaceSet, useWizardConfig } from "./configStore";
@@ -18,6 +19,7 @@ const PROBLEM_ID = "getit-place-problem";
 export default function GetIt({ onBack }: { onBack?: () => void }) {
 	const t = useTranslations("getIt");
 	const placeSet = useWizardConfig(selectPlaceSet);
+	const config = useWizardConfig((s) => s.config);
 
 	return (
 		<section aria-labelledby="getIt-heading" className="flex flex-col gap-5">
@@ -54,24 +56,7 @@ export default function GetIt({ onBack }: { onBack?: () => void }) {
 						</p>
 					</div>
 				</article>
-				<article className="flex flex-col gap-3 bg-paper-raised p-5">
-					<h3 className="text-lg">{t("icsHeading")}</h3>
-					<p className="text-sm text-muted">{t("icsBody")}</p>
-					<div className="mt-auto flex flex-col items-start gap-1.5 pt-2">
-						<button
-							type="button"
-							disabled
-							aria-describedby={placeSet ? "getit-ics-soon" : PROBLEM_ID}
-							className="btn"
-						>
-							<Download aria-hidden className="size-4" />
-							{t("downloadButton")}
-						</button>
-						<p id="getit-ics-soon" className="text-xs text-muted">
-							<span className="font-semibold">{t("comingSoon")}</span> · {t("icsSoon")}
-						</p>
-					</div>
-				</article>
+				<DownloadCard config={config} placeSet={placeSet} problemId={PROBLEM_ID} />
 			</div>
 
 			<NavButtons onBack={onBack} />

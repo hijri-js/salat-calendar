@@ -800,7 +800,7 @@ flowchart LR
 ### PR 6: `.ics` download
 
 - `ics.ts` (pure, tested: line folding, escaping, UTC conversion across DST, fixed UIDs), download card.
-- **Deferred (decided 2026-11-18):** `ics.ts` exists and is tested. The remaining work, the Download wiring (`useIcsDownload.ts`) and `DownloadCard`, moves to a later PR.
+- **Done:** `ics.ts` (PR 18); the download in this PR: `icsFile.ts` (rolling-year window, month chunks, file name, engine → file; tested), `useIcsDownload.ts` (one cached preview request per month, so each stays inside the Worker limits and shows progress), `DownloadCard` on the Get it step.
 - **Check:** import the file into Google Calendar and one other app; times match the preview on a DST-change week.
 
 ### PR 7: Google connect and sync
