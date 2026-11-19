@@ -22,7 +22,7 @@
 			"preview": "المعاينة",
 			"getIt": "احصل عليه"
 		},
-		"stepOf": "الخطوة {current} من {total}"
+		"stepOf": "الخطوة {current} من {total} · {name}"
 	},
 	"validity": {
 		"pickACity": "اختر مدينة"

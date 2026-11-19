@@ -22,7 +22,7 @@
 			"preview": "Preview",
 			"getIt": "Get it"
 		},
-		"stepOf": "Step {current} of {total}"
+		"stepOf": "Step {current} of {total} · {name}"
 	},
 	"validity": {
 		"pickACity": "Pick a city"

@@ -24,7 +24,7 @@ export default function Stepper({ active, onSelect, problems }: StepperProps) {
 
 	return (
 		<nav aria-label={t("label")} className="flex flex-col gap-2">
-			<ol className="flex items-center gap-1 sm:gap-1.5">
+			<ol className="flex items-center gap-0.5 sm:gap-1.5">
 				{WIZARD_STEPS.map((step, index) => {
 					const problem = problems?.[step];
 					const isActive = step === active;
@@ -69,7 +69,11 @@ export default function Stepper({ active, onSelect, problems }: StepperProps) {
 				})}
 			</ol>
 			<p className="text-xs text-muted md:hidden" aria-hidden>
-				{t("stepOf", { current: activeIndex + 1, total: WIZARD_STEPS.length })}
+				{t("stepOf", {
+					current: activeIndex + 1,
+					total: WIZARD_STEPS.length,
+					name: t(`steps.${WIZARD_STEPS[activeIndex]}`),
+				})}
 			</p>
 		</nav>
 	);
