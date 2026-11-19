@@ -17,7 +17,7 @@ import type { SyncConfig } from "@/lib/prayer-engine/types";
 
 import { buildPreviewBody } from "./previewBody";
 
-async function fetchPreview(
+export async function fetchPreview(
 	body: PreviewRequestValue,
 	signal: AbortSignal,
 ): Promise<DayTimings[]> {
