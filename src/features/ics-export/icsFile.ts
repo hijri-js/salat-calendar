@@ -10,13 +10,15 @@ import { buildIcs } from "./ics";
 
 /** Today's "YYYY-MM-DD" in the place's timezone (not the device's). */
 export function todayIn(timeZone: string, now: Date = new Date()): string {
-	// en-CA formats dates as YYYY-MM-DD; Latin digits are forced explicitly.
-	return new Intl.DateTimeFormat("en-CA-u-nu-latn", {
+	// Read the parts instead of trusting one locale's date layout.
+	const parts = new Intl.DateTimeFormat("en-US-u-nu-latn", {
 		timeZone,
 		year: "numeric",
 		month: "2-digit",
 		day: "2-digit",
-	}).format(now);
+	}).formatToParts(now);
+	const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value ?? "";
+	return `${part("year")}-${part("month")}-${part("day")}`;
 }
 
 function toUtcDate(iso: string): Date {
@@ -73,6 +75,11 @@ export function icsFileName(label: string | undefined, from: string): string {
 		.replace(/[^a-z0-9]+/g, "-")
 		.replace(/^-+|-+$/g, "");
 	return city === "" ? `salat-calendar-${year}.ics` : `salat-${city}-${year}.ics`;
+}
+
+/** The file's calendar name, in the language the event titles use. */
+export function calendarNameFor(titleLocale: SyncConfig["titleLocale"]): string {
+	return titleLocale === "ar" ? "الصلاة" : "Salat";
 }
 
 export interface YearIcs {

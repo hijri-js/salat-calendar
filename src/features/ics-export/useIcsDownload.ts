@@ -20,6 +20,7 @@ export type IcsDownloadState =
 	| { status: "idle" }
 	| { status: "working"; done: number; total: number }
 	| { status: "done"; eventCount: number; fileName: string; usedLocal: boolean; from: string; to: string }
+	| { status: "empty" }
 	| { status: "error" };
 
 /** Hand a text file to the browser as a download. */
@@ -37,7 +38,8 @@ function saveFile(text: string, fileName: string): void {
 	setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-export function useIcsDownload(config: SyncConfig) {
+/** `calendarName` is the file's display name (X-WR-CALNAME), localized by the caller. */
+export function useIcsDownload(config: SyncConfig, calendarName: string) {
 	const [state, setState] = useState<IcsDownloadState>({ status: "idle" });
 	const controller = useRef<AbortController | null>(null);
 
@@ -53,11 +55,14 @@ export function useIcsDownload(config: SyncConfig) {
 		const abort = new AbortController();
 		controller.current = abort;
 
-		const { from, to } = yearRange(todayIn(timeZone));
-		const chunks = monthChunks(from, to);
-		setState({ status: "working", done: 0, total: chunks.length });
-
+		// Everything after taking the slot is inside try, so finally always
+		// frees it: a throw here (e.g. a timezone this browser's ICU does not
+		// know) must show an error, not leave the button silently dead.
 		try {
+			const { from, to } = yearRange(todayIn(timeZone));
+			const chunks = monthChunks(from, to);
+			setState({ status: "working", done: 0, total: chunks.length });
+
 			const timings: DayTimings[] = [];
 			for (const [index, chunk] of chunks.entries()) {
 				const body = buildPreviewBody(config, chunk.from, chunk.to);
@@ -67,7 +72,16 @@ export function useIcsDownload(config: SyncConfig) {
 				timings.push(...(await fetchPreview(body, abort.signal)));
 				setState({ status: "working", done: index + 1, total: chunks.length });
 			}
-			const result = buildYearIcs(timings, config, { calendarName: "Salat" });
+			// The user may have left the step while the last month arrived.
+			if (abort.signal.aborted) {
+				return;
+			}
+			const result = buildYearIcs(timings, config, { calendarName });
+			if (result.eventCount === 0) {
+				// Every prayer or day is off: an empty file helps nobody.
+				setState({ status: "empty" });
+				return;
+			}
 			const fileName = icsFileName(config.location.label, from);
 			saveFile(result.text, fileName);
 			setState({
@@ -85,7 +99,7 @@ export function useIcsDownload(config: SyncConfig) {
 		} finally {
 			controller.current = null;
 		}
-	}, [config]);
+	}, [config, calendarName]);
 
 	return { state, start };
 }

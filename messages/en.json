@@ -204,7 +204,7 @@
 	"ics": {
 		"heading": "Download a file (.ics)",
 		"body": "Works in Outlook, Apple Calendar and Google Calendar. No sign-in.",
-		"snapshot": "A one-year snapshot. To change your rules, download again and import the new file; events from an older file stay until you delete them.",
+		"snapshot": "A one-year snapshot. To change your rules, download again and import the new file: apps that match events by ID update them, but events you have since turned off stay until you delete them.",
 		"separateCalendar": "Tip: import it into a new, separate calendar so you can remove everything in one go.",
 		"noVacationSkip": "Vacation skip needs Google sync; the file includes every day.",
 		"download": "Download",
@@ -213,6 +213,7 @@
 		"progress": "Getting prayer times: month {done} of {total}",
 		"done": "{count, plural, =0 {No events for} one {# event for} other {# events for}} {range}, saved as",
 		"error": "Could not get the prayer times. Please try again.",
-		"usedLocal": "Some months were calculated on our server because the prayer-times service was unavailable; times may differ by a minute or two."
+		"usedLocal": "Some months were calculated on our server because the prayer-times service was unavailable; times may differ by a minute or two.",
+		"empty": "Nothing to export: every prayer or every day is turned off."
 	}
 }

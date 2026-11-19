@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { defaultConfig } from "@/features/wizard";
-import { buildYearIcs, icsFileName, monthChunks, todayIn, yearRange } from "@/features/ics-export/icsFile";
+import { buildYearIcs, calendarNameFor, icsFileName, monthChunks, todayIn, yearRange } from "@/features/ics-export/icsFile";
 import type { DayTimings, SyncConfig } from "@/lib/prayer-engine/types";
 
 const LONDON: SyncConfig = {
@@ -96,5 +96,12 @@ describe("buildYearIcs", () => {
 		// Fajr 05:10 + 15 min offset = 05:25 local: GMT before, BST (UTC+1) after.
 		expect(result.text).toContain("DTSTART:20270327T052500Z");
 		expect(result.text).toContain("DTSTART:20270329T042500Z");
+	});
+});
+
+describe("calendarNameFor", () => {
+	it("names the calendar in the event-title language", () => {
+		expect(calendarNameFor("en")).toBe("Salat");
+		expect(calendarNameFor("ar")).toBe("الصلاة");
 	});
 });
