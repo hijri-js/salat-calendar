@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { resetTimingsCacheForTest } from "@/lib/prayer-data/cache";
-import { POST } from "../route";
+import { resetRateLimitPauseForTest } from "@/lib/prayer-data/preview";
+import { POST } from "@/app/api/prayers/preview/route";
 
 const validBody = {
 	latitude: 51.5,
@@ -26,6 +27,7 @@ function post(body: unknown): Promise<Response> {
 afterEach(() => {
 	vi.unstubAllGlobals();
 	resetTimingsCacheForTest();
+	resetRateLimitPauseForTest();
 });
 
 /** Stub fetch with a realistic one-day AlAdhan-shaped answer. */
@@ -58,6 +60,51 @@ describe("POST /api/prayers/preview", () => {
 		await post(validBody);
 		await post(validBody);
 		expect((globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(1);
+	});
+
+	it("rejects a cross-origin request", async () => {
+		const response = await POST(
+			new Request("http://localhost/api/prayers/preview", {
+				method: "POST",
+				body: JSON.stringify(validBody),
+				headers: { "content-type": "application/json", origin: "https://evil.example" },
+			}),
+		);
+		expect(response.status).toBe(403);
+	});
+
+	it("accepts a same-origin request", async () => {
+		stubAladhan();
+		const response = await POST(
+			new Request("http://localhost/api/prayers/preview", {
+				method: "POST",
+				body: JSON.stringify(validBody),
+				headers: { "content-type": "application/json", origin: "http://localhost" },
+			}),
+		);
+		expect(response.status).toBe(200);
+	});
+
+	it("rejects bodies that are not declared as JSON (blocks simple cross-site form posts)", async () => {
+		const response = await POST(
+			new Request("http://localhost/api/prayers/preview", {
+				method: "POST",
+				body: JSON.stringify(validBody),
+				headers: { "content-type": "text/plain" },
+			}),
+		);
+		expect(response.status).toBe(415);
+	});
+
+	it("measures the real body size, not only the Content-Length header", async () => {
+		const response = await POST(
+			new Request("http://localhost/api/prayers/preview", {
+				method: "POST",
+				body: JSON.stringify({ ...validBody, padding: "x".repeat(11_000) }),
+				headers: { "content-type": "application/json" },
+			}),
+		);
+		expect(response.status).toBe(413);
 	});
 
 	it("rejects invalid JSON", async () => {

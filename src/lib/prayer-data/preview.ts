@@ -10,7 +10,7 @@
 
 import type { DayTimings } from "@/lib/prayer-engine/types";
 import { ApiError, fetchMonthRaw } from "./aladhan";
-import { cacheKey, TIMINGS_TTL_SECONDS, type TimingsCache } from "./cache";
+import { cacheKey, roundCoord, TIMINGS_TTL_SECONDS, type TimingsCache } from "./cache";
 import { computeLocalMonthTimings } from "./localFallback";
 import { normalizeMonth } from "./normalize";
 
@@ -32,6 +32,20 @@ export interface PreviewDeps {
 	fetchMonth?: typeof fetchMonthRaw;
 	normalize?: typeof normalizeMonth;
 	computeLocal?: typeof computeLocalMonthTimings;
+	/** Clock for the rate-limit pause; injectable for tests. */
+	now?: () => number;
+}
+
+/** After AlAdhan answers 429, skip it for this long and compute locally. */
+export const RATE_LIMIT_PAUSE_MS = 60_000;
+
+// Per-isolate circuit breaker: one 429 pauses every request on this isolate,
+// so a burst of traffic cannot keep hammering AlAdhan (plan §5: ~12 req/s).
+let aladhanPausedUntil = 0;
+
+/** Test helper: clear the rate-limit pause between tests. */
+export function resetRateLimitPauseForTest(): void {
+	aladhanPausedUntil = 0;
 }
 
 /** Days between two inclusive "YYYY-MM-DD" dates. */
@@ -75,6 +89,9 @@ export async function getTimingsForRange(
 		throw new RangeError(`Preview range must be 1–${PREVIEW_MAX_DAYS} days`);
 	}
 
+	const now = deps.now ?? Date.now;
+	const latitude = roundCoord(request.latitude);
+	const longitude = roundCoord(request.longitude);
 	const days: DayTimings[] = [];
 	for (const { year, month } of listMonths(request.from, request.to)) {
 		const key = cacheKey({ ...request, year, month });
@@ -90,9 +107,12 @@ export async function getTimingsForRange(
 			continue;
 		}
 		try {
+			if (now() < aladhanPausedUntil) {
+				throw new ApiError("RATE_LIMIT", "AlAdhan paused after a recent 429", 429);
+			}
 			const raw = await (deps.fetchMonth ?? fetchMonthRaw)({
-				latitude: request.latitude,
-				longitude: request.longitude,
+				latitude,
+				longitude,
 				method: request.method,
 				school: request.school,
 				year,
@@ -107,12 +127,15 @@ export async function getTimingsForRange(
 				// A cache-write failure must not discard good AlAdhan data.
 			}
 			days.push(...timings);
-		} catch {
+		} catch (error) {
 			// Network, rate limit, server or shape errors all fall back locally;
 			// fallback results are never cached (plan §4.9).
+			if (error instanceof ApiError && error.code === "RATE_LIMIT" && now() >= aladhanPausedUntil) {
+				aladhanPausedUntil = now() + RATE_LIMIT_PAUSE_MS;
+			}
 			const local = await (deps.computeLocal ?? computeLocalMonthTimings)({
-				latitude: request.latitude,
-				longitude: request.longitude,
+				latitude,
+				longitude,
 				method: request.method,
 				school: request.school,
 				year,

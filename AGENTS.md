@@ -5,9 +5,13 @@ This repo is **salat-calendar** (the folder was originally named `salaat-sync`).
 ## Hard rules
 
 - **pnpm only.** Never generate `package-lock.json` or `yarn.lock`.
+- **CI audit runs `pnpm audit --audit-level high`.** A known advisory with no
+  patched release may be ignored only by its GHSA id in `pnpm-workspace.yaml`
+  (`auditConfig.ignoreGhsas`), with a comment saying why and when to remove it.
+  If an advisory is fixable, bump or override the dependency instead.
 - **Source files are camelCase** (`localFallback.ts`, not `local-fallback.ts`). Test files mirror the source name (`localFallback.test.ts`). Keep standard kebab-case only where ecosystems expect it: fixture data files, `.github/` workflows, and tool config files (`eslint.config.mjs`, `next.config.ts`).
 - **Use `@/` imports** for anything outside the current folder (e.g. `@/lib/prayer-engine/types`); plain relative `./` imports only within the same folder. The alias is configured in `tsconfig.json` and mirrored in `vitest.config.ts` — keep the two in sync if either changes.
-- **TypeScript strict**; Next.js App Router; Tailwind CSS v4 + shadcn/ui (Radix) + Lucide icons.
+- **TypeScript strict**; Next.js App Router; Tailwind CSS v4 + native HTML elements + Lucide icons (see docs/adr/0001).
 - **i18n:** `next-intl`, routes `/en` and `/ar`, `dir="rtl"` for Arabic, numerals stay Latin, logical CSS properties (`ms-`, `pe-`).
 - **No database.** User rules live in browser memory; event ownership lives on the Google event tags.
 - **Google access token never stored** — not in cookies, localStorage, server, or logs. No refresh token. Token travels in the `Authorization` header per request and is forgotten.
@@ -45,3 +49,13 @@ Single-context: one `GLOSSARY.md` plus `docs/adr/` at the repo root. See `docs/a
 ### Subagents
 
 A `subagent` tool is available (user-level Pi extension). Roles defined in `~/.pi/agent/agents/`: `scout` (read-only recon), `planner`, `worker` (implementation), `reviewer` (read-only review — the review-loop reviewer of record), `docs-writer` (PR-2 style docs). Parallel implementation agents require separate git worktrees per the plan's subagent section; do not run two write-agents against one working tree.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+## This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

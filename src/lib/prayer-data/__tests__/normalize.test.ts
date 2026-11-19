@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { ApiError } from "../aladhan";
-import { normalizeMonth } from "../normalize";
+import { ApiError } from "@/lib/prayer-data/aladhan";
+import { normalizeMonth } from "@/lib/prayer-data/normalize";
 import type { Prayer } from "@/lib/prayer-engine/types";
 import londonNov from "./fixtures/london-nov-2026-mwl.json";
 import londonJun from "./fixtures/london-jun-2026-mwl.json";

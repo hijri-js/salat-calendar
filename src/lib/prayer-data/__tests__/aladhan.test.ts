@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { aladhanCalendarUrl, ApiError, fetchMonthRaw } from "../aladhan";
+import { aladhanCalendarUrl, ApiError, fetchMonthRaw } from "@/lib/prayer-data/aladhan";
 
 const base = { latitude: 51.5, longitude: -0.12, method: 3, school: "standard" as const, year: 2026, month: 11 };
 

@@ -1,9 +1,20 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { DayTimings } from "@/lib/prayer-engine/types";
-import { ApiError } from "../aladhan";
-import { MemoryTimingsCache, TIMINGS_TTL_SECONDS } from "../cache";
-import { daysBetweenInclusive, getTimingsForRange, listMonths, PREVIEW_MAX_DAYS } from "../preview";
+import { ApiError } from "@/lib/prayer-data/aladhan";
+import { MemoryTimingsCache, TIMINGS_TTL_SECONDS } from "@/lib/prayer-data/cache";
+import {
+	daysBetweenInclusive,
+	getTimingsForRange,
+	listMonths,
+	PREVIEW_MAX_DAYS,
+	RATE_LIMIT_PAUSE_MS,
+	resetRateLimitPauseForTest,
+} from "@/lib/prayer-data/preview";
+
+afterEach(() => {
+	resetRateLimitPauseForTest();
+});
 
 const request = {
 	latitude: 51.5,
@@ -89,6 +100,39 @@ describe("getTimingsForRange", () => {
 		expect(days.every((d) => d.source === "local")).toBe(true);
 		// Fallback is not cached: the cache stays empty.
 		expect((cache as unknown as { entries: Map<string, unknown> }).entries.size).toBe(0);
+	});
+
+	it("pauses AlAdhan for a minute after a 429, then tries again", async () => {
+		let clock = 1_000_000;
+		const now = () => clock;
+		const computeLocal = vi.fn(() => makeDays(2026, 11, 30, "local"));
+		const limited = vi.fn(async () => {
+			throw new ApiError("RATE_LIMIT", "slow down", 429);
+		});
+		await getTimingsForRange(request, { cache: new MemoryTimingsCache(), fetchMonth: limited, computeLocal, now });
+
+		// Inside the pause: AlAdhan is not called at all.
+		const healthy = vi.fn(async () => ({}));
+		const normalize = vi.fn(() => makeDays(2026, 11, 30));
+		clock += RATE_LIMIT_PAUSE_MS - 1;
+		await getTimingsForRange(request, { cache: new MemoryTimingsCache(), fetchMonth: healthy, normalize, computeLocal, now });
+		expect(healthy).not.toHaveBeenCalled();
+
+		// After the pause: AlAdhan is called again.
+		clock += 1;
+		const days = await getTimingsForRange(request, { cache: new MemoryTimingsCache(), fetchMonth: healthy, normalize, computeLocal, now });
+		expect(healthy).toHaveBeenCalledTimes(1);
+		expect(days.every((d) => d.source === "aladhan")).toBe(true);
+	});
+
+	it("sends coordinates rounded to 2 decimals, matching the cache key", async () => {
+		const fetchMonth = vi.fn<(params: { latitude: number; longitude: number }) => Promise<unknown>>(async () => ({}));
+		const normalize = vi.fn(() => makeDays(2026, 11, 30));
+		await getTimingsForRange(
+			{ ...request, latitude: 51.507351, longitude: -0.127758 },
+			{ cache: new MemoryTimingsCache(), fetchMonth, normalize },
+		);
+		expect(fetchMonth.mock.calls[0]![0]).toMatchObject({ latitude: 51.51, longitude: -0.13 });
 	});
 
 	it("also falls back when the response shape is unexpected", async () => {

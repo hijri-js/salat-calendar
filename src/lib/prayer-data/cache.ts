@@ -30,9 +30,18 @@ export interface CacheKeyParams {
 	month: number;
 }
 
+/**
+ * Round a coordinate to 2 decimals (~1 km). The one helper for both the
+ * cache key and the upstream request, so they can never disagree (toFixed
+ * and Math.round differ on negative halves, e.g. -0.125).
+ */
+export function roundCoord(value: number): number {
+	return Math.round(value * 100) / 100;
+}
+
 export function cacheKey(params: CacheKeyParams): string {
-	const lat = params.latitude.toFixed(2);
-	const lng = params.longitude.toFixed(2);
+	const lat = roundCoord(params.latitude).toFixed(2);
+	const lng = roundCoord(params.longitude).toFixed(2);
 	const month = String(params.month).padStart(2, "0");
 	return `salat-cal:v1:${lat}:${lng}:${params.method}:${params.school}:${params.year}-${month}`;
 }

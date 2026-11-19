@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import type { DayTimings, OooEvent, PrayerRule, SyncConfig } from "../types";
-import { isExcludedByOoo, planDay, planRange, resolveJummah } from "../scheduler";
+import type { DayTimings, OooEvent, PrayerRule, SyncConfig } from "@/lib/prayer-engine/types";
+import { isExcludedByOoo, planDay, planRange, resolveJummah } from "@/lib/prayer-engine/scheduler";
 
 const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6] as SyncConfig["days"];
 
@@ -179,8 +179,9 @@ describe("planDay: midnight crossings", () => {
 		const isha = plan.events[4];
 		expect(isha.startLocal).toBe("2026-11-16T00:05");
 		expect(isha.endLocal).toBe("2026-11-16T00:25");
-		// The id follows the event's own date (plan §4.5).
-		expect(isha.id).toBe("sc20261116p4");
+		// The id follows the prayer's own (source) date, not the shifted one,
+		// so two days crossing midnight can never share an id.
+		expect(isha.id).toBe("sc20261115p4");
 	});
 
 	it("moves a Fajr event to the previous date for a negative offset", () => {
@@ -193,7 +194,43 @@ describe("planDay: midnight crossings", () => {
 		const fajr = plan.events[0];
 		expect(fajr.startLocal).toBe("2026-11-14T23:50");
 		expect(fajr.endLocal).toBe("2026-11-15T00:10");
-		expect(fajr.id).toBe("sc20261114p0");
+		expect(fajr.id).toBe("sc20261115p0");
+	});
+});
+
+describe("event ids are unique across a midnight crossing", () => {
+	it("gives two consecutive Ishas different ids when only the first crosses midnight", () => {
+		// +10: day 1 Isha 23:51 -> day 2 00:01; day 2 Isha 23:49 -> day 2 23:59.
+		const config = makeConfig({ defaults: { offsetMin: 10, durationMin: 20, transparency: "opaque" } });
+		const plans = planRange(
+			[makeTimings("2026-06-20", { isha: "23:51" }), makeTimings("2026-06-21", { isha: "23:49" })],
+			config,
+		);
+		const first = plans[0].events.find((e) => e.prayer === "isha");
+		const second = plans[1].events.find((e) => e.prayer === "isha");
+		expect(first?.startLocal).toBe("2026-06-21T00:01");
+		expect(second?.startLocal).toBe("2026-06-21T23:59");
+		expect(first?.id).not.toBe(second?.id);
+		expect(first?.id).toBe("sc20260620p4");
+		expect(second?.id).toBe("sc20260621p4");
+	});
+
+	it("never excludes anything when there are no out-of-office spans", () => {
+		expect(isExcludedByOoo([], ["OOO"], "2026-06-21T00:01", "2026-06-21T00:21")).toBe(false);
+	});
+
+	it("checks out-of-office spans on the date the event actually lands", () => {
+		// Isha on 20 Jun is pushed to 21 Jun 00:01; 21 Jun is an all-day vacation.
+		const config = makeConfig({
+			defaults: { offsetMin: 10, durationMin: 20, transparency: "opaque" },
+			ooo: { enabled: true, keywords: [] },
+		});
+		const oooByDate = new Map([
+			["2026-06-21", [{ startLocal: "2026-06-21T00:00", endLocal: "2026-06-21T23:59", allDay: true }]],
+		]);
+		const [plan] = planRange([makeTimings("2026-06-20", { isha: "23:51" })], config, oooByDate);
+		expect(plan.events.find((e) => e.prayer === "isha")).toBeUndefined();
+		expect(plan.skipped).toContainEqual(expect.objectContaining({ date: "2026-06-20", prayer: "isha", reason: "ooo" }));
 	});
 });
 
@@ -213,6 +250,26 @@ describe("planDay: time window", () => {
 		expect(june.skipped.find((s) => s.prayer === "maghrib")?.reason).toBe("outside-window");
 	});
 
+	it("records where a window-skipped event would have started (after offset and rounding)", () => {
+		const config = makeConfig({
+			window: { startMin: 480, endMin: 960 },
+			defaults: { offsetMin: 10, durationMin: 20, transparency: "opaque" },
+			rounding: { grid: 10, direction: "up" },
+		});
+		const plan = planDay(
+			makeTimings(SUNDAY, { isha: "17:59" }),
+			{ ...config, prayers: { fajr: { enabled: false }, dhuhr: { enabled: false }, asr: { enabled: false }, maghrib: { enabled: false }, isha: { enabled: true } } },
+		);
+		expect(plan.skipped.find((s) => s.prayer === "isha")).toEqual({
+			date: SUNDAY,
+			prayer: "isha",
+			reason: "outside-window",
+			startLocal: `${SUNDAY}T18:10`,
+		});
+		// Skips decided before the timing is known carry no start.
+		expect(plan.skipped.find((s) => s.prayer === "fajr")?.startLocal).toBeUndefined();
+	});
+
 	it("wraps an overnight window 22:00-06:00", () => {
 		const config = makeConfig({ window: { startMin: 1320, endMin: 360 } });
 		const plan = planDay(
@@ -220,7 +277,7 @@ describe("planDay: time window", () => {
 			{ ...config, prayers: { fajr: { enabled: true }, dhuhr: { enabled: true }, asr: { enabled: false }, maghrib: { enabled: false }, isha: { enabled: true } } },
 		);
 		expect(plan.events.map((e) => e.prayer).sort()).toEqual(["fajr", "isha"]);
-		expect(plan.skipped).toContainEqual({ date: SUNDAY, prayer: "dhuhr", reason: "outside-window" });
+		expect(plan.skipped).toContainEqual(expect.objectContaining({ date: SUNDAY, prayer: "dhuhr", reason: "outside-window" }));
 	});
 });
 
@@ -349,7 +406,7 @@ describe("planDay: out-of-office skip (plan §2)", () => {
 		};
 		const plan = planDay(makeTimings(SUNDAY, { asr: "15:00" }), config, [meeting]);
 		// Asr 15:15-15:35 overlaps; Maghrib 18:15-18:35 does not.
-		expect(plan.skipped).toContainEqual({ date: SUNDAY, prayer: "asr", reason: "ooo" });
+		expect(plan.skipped).toContainEqual(expect.objectContaining({ date: SUNDAY, prayer: "asr", reason: "ooo" }));
 		expect(plan.events.map((e) => e.prayer)).toContain("maghrib");
 	});
 
@@ -362,7 +419,7 @@ describe("planDay: out-of-office skip (plan §2)", () => {
 			title: "Flight to VACATION land",
 		};
 		const plan = planDay(makeTimings(SUNDAY, { isha: "19:30", maghrib: "17:00" }), config, [flight]);
-		expect(plan.skipped).toContainEqual({ date: SUNDAY, prayer: "isha", reason: "ooo" });
+		expect(plan.skipped).toContainEqual(expect.objectContaining({ date: SUNDAY, prayer: "isha", reason: "ooo" }));
 		expect(plan.events.map((e) => e.prayer)).toContain("maghrib");
 	});
 

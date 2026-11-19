@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { cacheKey, CacheApiTimingsCache, MemoryTimingsCache, TIMINGS_TTL_SECONDS } from "../cache";
+import { cacheKey, CacheApiTimingsCache, roundCoord, MemoryTimingsCache, TIMINGS_TTL_SECONDS } from "@/lib/prayer-data/cache";
 import type { DayTimings } from "@/lib/prayer-engine/types";
 
 const value: DayTimings[] = [
@@ -88,5 +88,14 @@ describe("CacheApiTimingsCache", () => {
 	it("returns undefined on a miss", async () => {
 		const cache = new CacheApiTimingsCache(makeFakeCache());
 		await expect(cache.get("nothing")).resolves.toBeUndefined();
+	});
+});
+
+describe("roundCoord and cacheKey agree", () => {
+	it("rounds negative halves the same way in the key and the request", () => {
+		const key = cacheKey({ latitude: -0.125, longitude: 51.505, method: 3, school: "standard", year: 2026, month: 11 });
+		// toFixed alone would give "-0.13"; the request uses roundCoord (-0.12).
+		expect(roundCoord(-0.125)).toBe(-0.12);
+		expect(key).toBe("salat-cal:v1:-0.12:51.51:3:standard:2026-11");
 	});
 });

@@ -2,7 +2,8 @@
 	"app": {
 		"name": "salat-calendar",
 		"title": "salat-calendar — مواقيت الصلاة في تقويمك",
-		"description": "حوّل سنة كاملة من مواقيت الصلاة إلى فعاليات حقيقية في تقويم Google أو إلى ملف .ics جاهز للتنزيل."
+		"description": "حوّل سنة كاملة من مواقيت الصلاة إلى فعاليات حقيقية في تقويم Google أو إلى ملف .ics جاهز للتنزيل.",
+		"tagline": "مواقيت صلاة تتبع الشمس، محفوظة في تقويمك."
 	},
 	"common": {
 		"back": "السابق",
@@ -20,7 +21,8 @@
 			"calendar": "التقويم",
 			"preview": "المعاينة",
 			"getIt": "احصل عليه"
-		}
+		},
+		"stepOf": "الخطوة {current} من {total} · {name}"
 	},
 	"validity": {
 		"pickACity": "اختر مدينة"
@@ -28,9 +30,7 @@
 	"place": {
 		"heading": "أين أنت؟",
 		"cityLabel": "مدينتك",
-		"cityPlaceholder": "لندن، المملكة المتحدة",
-		"cityHint": "نص حر حاليًا — يأتي البحث الحقيقي عن المدن في الشريحة التالية. أضف «، خط العرض، خط الطول» لضبط الإحداثيات.",
-		"setCity": "ضبط المدينة",
+		"cityPlaceholder": "مكة المكرمة، السعودية",
 		"currentPlace": "المكان الحالي",
 		"notSet": "لم يُضبط بعد",
 		"coordinates": "الإحداثيات",
@@ -38,7 +38,21 @@
 		"methodLabel": "طريقة الحساب",
 		"schoolLabel": "مذهب العصر",
 		"schoolStandard": "الجمهور (شافعي)",
-		"schoolHanafi": "حنفي"
+		"schoolHanafi": "حنفي",
+		"searchHint": "اكتب حرفين على الأقل للبحث عن مدينة.",
+		"searching": "جارٍ البحث…",
+		"searchNoResults": "لا توجد نتائج مطابقة",
+		"searchError": "فشل البحث — حاول مرة أخرى.",
+		"cityResults": "اقتراحات المدن",
+		"gpsButton": "استخدم موقعي",
+		"gpsLocating": "جارٍ تحديد موقعك…",
+		"gpsErrorPermission": "تم رفض إذن الموقع — اسمح به في المتصفح أو اختر مدينة يدويًا.",
+		"gpsErrorUnavailable": "موقعك غير متاح على هذا الجهاز.",
+		"gpsErrorTimeout": "استغرق تحديد موقعك وقتًا طويلاً — حاول مرة أخرى.",
+		"gpsErrorGeneric": "تعذّر تحديد موقعك — اختر مدينة يدويًا.",
+		"myLocation": "موقعي",
+		"gpsTimezoneHint": "تم تحديد موقعك عبر جهازك — تُستخدم المنطقة الزمنية للجهاز.",
+		"suggestedFor": "مقترح لـ {country}"
 	},
 	"prayers": {
 		"heading": "أي الصلوات؟",
@@ -64,14 +78,20 @@
 		"presetsLabel": "اختصارات",
 		"presetAll": "الكل",
 		"presetSunThu": "الأحد–الخميس",
-		"presetMonFri": "الاثنين–الجمعة"
+		"presetMonFri": "الاثنين–الجمعة",
+		"customise": "تخصيص",
+		"offsetLabel": "الإزاحة (دقيقة)",
+		"durationLabel": "المدة (دقيقة)",
+		"emojiLabel": "الرمز",
+		"titleLabel": "عنوان مخصص",
+		"titlePlaceholder": "مثال: الظهر",
+		"transparencyLabel": "مشغول أم متفرغ لـ {prayer}"
 	},
 	"timing": {
 		"heading": "الافتراضي لكل الصلوات",
 		"offsetLabel": "البداية بعد الأذان (دقيقة)",
 		"durationLabel": "مدة الفعالية (دقيقة)",
 		"roundingLabel": "محاذاة البداية إلى الشبكة",
-		"gridLabel": "الشبكة",
 		"gridOff": "بلا",
 		"grid5": "5 دقائق",
 		"grid10": "10 دقائق",
@@ -89,7 +109,10 @@
 		"none": "بلا موعد للجمعة",
 		"fixedTimeLabel": "الوقت الثابت",
 		"jummahOffsetLabel": "البداية بعد الأذان (دقيقة)",
-		"jummahDurationLabel": "المدة (دقيقة)"
+		"jummahDurationLabel": "المدة (دقيقة)",
+		"windowHint": "الصلوات التي تبدأ خارج {from}–{to} تُتخطى.",
+		"windowHintOvernight": "النافذة تعبر منتصف الليل ({from}–{to}): تُتخطى الصلوات التي تبدأ بين {to} و{from}.",
+		"windowEmpty": "البداية والنهاية متطابقتان. اختر وقتين مختلفين."
 	},
 	"calendar": {
 		"heading": "التقويم",
@@ -111,18 +134,42 @@
 		"keywordPlaceholder": "أضف كلمة مفتاحية",
 		"addKeyword": "إضافة",
 		"removeKeyword": "إزالة الكلمة المفتاحية {keyword}",
-		"replaceLabel": "استبدال فعاليات المزامنات السابقة"
+		"replaceLabel": "استبدال فعاليات المزامنات السابقة",
+		"reminderMinutes": "قبل {countLatin} دقيقة"
 	},
 	"preview": {
 		"heading": "أيامك السبعة القادمة",
-		"placeholder": "تأتي شبكة الأسبوع عند توصيل المعاينة في الشريحة التالية."
+		"noCity": "اختر مدينتك أولًا — ستظهر المعاينة هنا.",
+		"previousWeek": "الأسبوع السابق",
+		"nextWeek": "الأسبوع التالي",
+		"loading": "جارٍ تحميل الأسبوع…",
+		"loadingWeek": "جارٍ تحميل الأسبوع…",
+		"loadError": "تعذّر تحميل مواقيت الصلاة — حاول مرة أخرى.",
+		"skipReason": {
+			"prayer-off": "الصلاة مُطفأة",
+			"day-off": "اليوم مُطفأ",
+			"jummah-off": "بلا موعد للجمعة",
+			"outside-window": "خارج النافذة",
+			"ooo": "غائب"
+		},
+		"skipped": "مُتخطى: {reason}",
+		"windowStarts": "تبدأ النافذة {time}",
+		"windowEnds": "تنتهي النافذة {time}",
+		"legendBusy": "مشغول",
+		"legendFree": "متفرغ",
+		"legendSkipped": "مُتخطى (انقر لمعرفة السبب)",
+		"eventsWeek": "{count, plural, =0 {لا فعاليات هذا الأسبوع} one {فعالية واحدة هذا الأسبوع} two {فعاليتان هذا الأسبوع} few {{countLatin} فعاليات هذا الأسبوع} many {{countLatin} فعالية هذا الأسبوع} other {{countLatin} فعالية هذا الأسبوع}}",
+		"yearEstimate": "نحو {countLatin} للعام"
 	},
 	"miniPreview": {
 		"heading": "اليوم في {city}",
 		"headingNoCity": "اليوم",
 		"eventsToday": "{count, plural, =0 {لا فعاليات} one {فعالية واحدة} two {فعاليتان} few {{countLatin} فعاليات} many {{countLatin} فعالية} other {{countLatin} فعالية}}",
 		"timezoneLabel": "المنطقة الزمنية",
-		"placeholder": "تأتي المعاينة الحية في الشريحة التالية."
+		"noCity": "اختر مدينة لترى مواقيت اليوم.",
+		"loading": "جارٍ تحميل اليوم…",
+		"off": "مُطفأة",
+		"skipped": "مُتخطاة"
 	},
 	"getIt": {
 		"heading": "احصل عليه",
@@ -132,7 +179,10 @@
 		"icsHeading": "تنزيل ملف (.ics)",
 		"icsBody": "يعمل في Outlook وApple. لقطة لسنة واحدة؛ بلا تخطٍّ لأيام الغياب.",
 		"downloadButton": "تنزيل",
-		"pickACityFirst": "اختر مدينتك أولًا"
+		"pickACityFirst": "اختر مدينتك أولًا",
+		"comingSoon": "قريبًا",
+		"syncSoon": "تصل مزامنة Google في إصدار لاحق.",
+		"icsSoon": "يصل تنزيل الملف في الإصدار القادم."
 	},
 	"methods": {
 		"1": "جامعة العلوم الإسلامية، كراتشي",

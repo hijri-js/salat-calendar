@@ -2,17 +2,19 @@
 
 /**
  * EN | ع switcher: links between /en and /ar on the current page. The labels
- * are language endonyms, not translatable UI strings.
+ * are language endonyms, not translatable UI strings. The visible label is
+ * the accessible name (voice control users say what they see); the full
+ * language name is the title. Each target is at
+ * least 40×40 px (WCAG 2.5.8 asks for 24).
  */
-import { Fragment } from "react";
 import { useLocale } from "next-intl";
 
 import { Link, usePathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 
-const ENDONYMS: Record<(typeof routing.locales)[number], string> = {
-	en: "EN",
-	ar: "ع",
+const ENDONYMS: Record<(typeof routing.locales)[number], { label: string; name: string }> = {
+	en: { label: "EN", name: "English" },
+	ar: { label: "ع", name: "العربية" },
 };
 
 export default function LanguageSwitcher() {
@@ -20,28 +22,26 @@ export default function LanguageSwitcher() {
 	const pathname = usePathname();
 
 	return (
-		<div className="flex items-center gap-1 text-sm">
-			{routing.locales.map((target, index) => (
-				<Fragment key={target}>
-					{index > 0 ? (
-						<span aria-hidden className="opacity-50">
-							|
-						</span>
-					) : null}
+		<div className="flex items-center rounded-full border border-line p-0.5 text-sm">
+			{routing.locales.map((target) => {
+				const current = target === locale;
+				return (
 					<Link
+						key={target}
 						href={pathname}
 						locale={target}
-						aria-current={target === locale ? "true" : undefined}
-						className={
-							target === locale
-								? "font-semibold"
-								: "opacity-60 hover:opacity-100"
-						}
+						hrefLang={target}
+						lang={target}
+						title={ENDONYMS[target].name}
+						aria-current={current ? "true" : undefined}
+						className={`touch-target inline-flex min-h-9 min-w-10 items-center justify-center rounded-full px-2 ${
+							current ? "bg-ink font-semibold text-paper" : "text-muted hover:text-ink"
+						}`}
 					>
-						{ENDONYMS[target]}
+						{ENDONYMS[target].label}
 					</Link>
-				</Fragment>
-			))}
+				);
+			})}
 		</div>
 	);
 }

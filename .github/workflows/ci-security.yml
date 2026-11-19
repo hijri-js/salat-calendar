@@ -19,6 +19,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0 # full history so every commit is scanned
+          persist-credentials: false # no token on disk while install scripts run
       - name: Gitleaks
         # Dependabot runs cannot read repo secrets (incl. GITLEAKS_LICENSE),
         # so the scan is skipped here and still runs on push to main after merge.
@@ -35,12 +36,15 @@ jobs:
       - name: Install dependencies (frozen)
         run: pnpm install --frozen-lockfile
       - name: Audit (high and above, all dependencies)
+        # Single, named exceptions live in pnpm-workspace.yaml (auditConfig).
         run: pnpm audit --audit-level high
 
   quality:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
@@ -54,3 +58,7 @@ jobs:
         run: pnpm lint
       - name: Vitest
         run: pnpm test
+      # Prerender errors (e.g. reading the clock in the static shell) only
+      # surface in a production build, not in tsc or tests.
+      - name: Build
+        run: pnpm build

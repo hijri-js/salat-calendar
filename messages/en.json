@@ -2,7 +2,8 @@
 	"app": {
 		"name": "salat-calendar",
 		"title": "salat-calendar — prayer times for your calendar",
-		"description": "Turn a year of prayer times into real Google Calendar events or a downloadable .ics file."
+		"description": "Turn a year of prayer times into real Google Calendar events or a downloadable .ics file.",
+		"tagline": "Prayer times that move with the sun, kept in your calendar."
 	},
 	"common": {
 		"back": "Back",
@@ -20,7 +21,8 @@
 			"calendar": "Calendar",
 			"preview": "Preview",
 			"getIt": "Get it"
-		}
+		},
+		"stepOf": "Step {current} of {total} · {name}"
 	},
 	"validity": {
 		"pickACity": "Pick a city"
@@ -28,9 +30,7 @@
 	"place": {
 		"heading": "Where are you?",
 		"cityLabel": "Your city",
-		"cityPlaceholder": "London, United Kingdom",
-		"cityHint": "Free text for now — real city search arrives with the next slice. Add “, lat, lng” to set coordinates.",
-		"setCity": "Set city",
+		"cityPlaceholder": "Makkah, Saudi Arabia",
 		"currentPlace": "Current place",
 		"notSet": "Not set yet",
 		"coordinates": "Coordinates",
@@ -38,7 +38,21 @@
 		"methodLabel": "Calculation method",
 		"schoolLabel": "Asr school",
 		"schoolStandard": "Shafi'i (standard)",
-		"schoolHanafi": "Hanafi"
+		"schoolHanafi": "Hanafi",
+		"searchHint": "Type at least 2 letters to search cities.",
+		"searching": "Searching…",
+		"searchNoResults": "No matching city",
+		"searchError": "City search failed — try again.",
+		"cityResults": "City suggestions",
+		"gpsButton": "Use my location",
+		"gpsLocating": "Finding your location…",
+		"gpsErrorPermission": "Location permission was denied — allow it in your browser, or pick a city by hand.",
+		"gpsErrorUnavailable": "Your location is not available on this device.",
+		"gpsErrorTimeout": "Getting your location took too long — try again.",
+		"gpsErrorGeneric": "Could not get your location — pick a city by hand.",
+		"myLocation": "My location",
+		"gpsTimezoneHint": "Location detected by your device — its own timezone is used.",
+		"suggestedFor": "Suggested for {country}"
 	},
 	"prayers": {
 		"heading": "Which prayers?",
@@ -64,14 +78,20 @@
 		"presetsLabel": "Presets",
 		"presetAll": "All",
 		"presetSunThu": "Sun–Thu",
-		"presetMonFri": "Mon–Fri"
+		"presetMonFri": "Mon–Fri",
+		"customise": "Customise",
+		"offsetLabel": "Offset (min)",
+		"durationLabel": "Length (min)",
+		"emojiLabel": "Emoji",
+		"titleLabel": "Custom title",
+		"titlePlaceholder": "e.g. Dhuhr",
+		"transparencyLabel": "Busy or free for {prayer}"
 	},
 	"timing": {
 		"heading": "Default for all prayers",
 		"offsetLabel": "Start after adhan (min)",
 		"durationLabel": "Event length (min)",
 		"roundingLabel": "Snap start to the clock",
-		"gridLabel": "Grid",
 		"gridOff": "Off",
 		"grid5": "5 min",
 		"grid10": "10 min",
@@ -89,7 +109,10 @@
 		"none": "No Friday slot",
 		"fixedTimeLabel": "Fixed time",
 		"jummahOffsetLabel": "Start after adhan (min)",
-		"jummahDurationLabel": "Length (min)"
+		"jummahDurationLabel": "Length (min)",
+		"windowHint": "Prayers starting outside {from}–{to} are skipped.",
+		"windowHintOvernight": "The window crosses midnight ({from}–{to}): prayers starting between {to} and {from} are skipped.",
+		"windowEmpty": "Start and end are the same. Pick two different times."
 	},
 	"calendar": {
 		"heading": "Calendar",
@@ -111,18 +134,42 @@
 		"keywordPlaceholder": "Add a keyword",
 		"addKeyword": "Add",
 		"removeKeyword": "Remove keyword {keyword}",
-		"replaceLabel": "Replace events from earlier syncs"
+		"replaceLabel": "Replace events from earlier syncs",
+		"reminderMinutes": "{countLatin} min before"
 	},
 	"preview": {
 		"heading": "Your next 7 days",
-		"placeholder": "The week grid arrives when the preview is wired up in the next slice."
+		"noCity": "Pick a city first — the preview will appear here.",
+		"previousWeek": "Previous week",
+		"nextWeek": "Next week",
+		"loading": "Loading the week…",
+		"loadingWeek": "Loading week…",
+		"loadError": "Could not load prayer times — try again.",
+		"skipReason": {
+			"prayer-off": "prayer switched off",
+			"day-off": "day switched off",
+			"jummah-off": "no Friday slot",
+			"outside-window": "outside the window",
+			"ooo": "away"
+		},
+		"skipped": "skipped: {reason}",
+		"windowStarts": "window starts {time}",
+		"windowEnds": "window ends {time}",
+		"legendBusy": "Busy",
+		"legendFree": "Free",
+		"legendSkipped": "Skipped (tap for the reason)",
+		"eventsWeek": "{count, plural, =0 {no events this week} one {# event this week} other {# events this week}}",
+		"yearEstimate": "about {countLatin} for the year"
 	},
 	"miniPreview": {
 		"heading": "Today in {city}",
 		"headingNoCity": "Today",
 		"eventsToday": "{count, plural, =0 {no events} one {# event} other {# events}}",
 		"timezoneLabel": "Timezone",
-		"placeholder": "Live preview arrives in the next slice."
+		"noCity": "Pick a city to see today’s times.",
+		"loading": "Loading today…",
+		"off": "off",
+		"skipped": "skipped"
 	},
 	"getIt": {
 		"heading": "Get it",
@@ -132,7 +179,10 @@
 		"icsHeading": "Download a file (.ics)",
 		"icsBody": "Works in Outlook and Apple. A one-year snapshot; no vacation skip.",
 		"downloadButton": "Download",
-		"pickACityFirst": "Pick a city first"
+		"pickACityFirst": "Pick a city first",
+		"comingSoon": "Coming soon",
+		"syncSoon": "Google sync arrives in a later release.",
+		"icsSoon": "The file download arrives in the next release."
 	},
 	"methods": {
 		"1": "University of Islamic Sciences, Karachi",

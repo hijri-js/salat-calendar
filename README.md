@@ -71,7 +71,7 @@ cp .env.example .env.local
 pnpm dev
 ```
 
-The wizard, the live preview, and the `.ics` download all work without any Google setup. The Google sync additionally needs a client ID (next section).
+The wizard and the live preview work without any Google setup. The `.ics` builder exists and is tested; the download button arrives in a later PR. The Google sync additionally needs a client ID (next section).
 
 ### Google client ID (only needed for the sync)
 
@@ -88,7 +88,7 @@ NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
 
 **Why there is no client secret.** Sign-in uses the Google Identity Services token popup. The browser gets an access token directly from Google; our server only forwards it per request and forgets it. No secret is ever exchanged, so there is none to save or leak. The client ID is public by design — it ships in the page.
 
-Until Google verifies the app, sign-in is limited to the test users you listed (100 users in total for an unverified app). The preview and `.ics` download work for everyone.
+Until Google verifies the app, sign-in is limited to the test users you listed (100 users in total for an unverified app). The preview works for everyone, and so will the `.ics` download once its button lands.
 
 ## Development
 
@@ -99,7 +99,7 @@ pnpm test         # Vitest with coverage
 pnpm build        # production build
 ```
 
-TypeScript is strict. Routes live under `src/app/` (routing only). Feature code sits together in `src/features/<feature>/`, and shared framework-free logic in `src/lib/`. The UI uses Tailwind CSS v4, shadcn/ui, and Lucide icons, with `next-intl` for English (`/en`) and Arabic (`/ar`, right-to-left).
+TypeScript is strict. Routes live under `src/app/` (routing only). Feature code sits together in `src/features/<feature>/`, and shared framework-free logic in `src/lib/`. The UI uses Tailwind CSS v4, native HTML elements, and Lucide icons (see [ADR 0001](docs/adr/0001-native-ui-over-shadcn.md)), with `next-intl` for English (`/en`) and Arabic (`/ar`, right-to-left).
 
 ## Tests
 

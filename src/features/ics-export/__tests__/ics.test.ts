@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { PlannedEvent } from "@/lib/prayer-engine/types";
 
-import { buildIcs, escapeText, foldLine, toUtc } from "../ics";
+import { buildIcs, escapeText, foldLine, toUtc } from "@/features/ics-export/ics";
 
 /** Octet (UTF-8 byte) length of a string, for fold assertions. */
 function octets(line: string): number {
@@ -189,6 +189,18 @@ describe("buildIcs", () => {
 	it("escapes and folds the SUMMARY", () => {
 		const escaped = buildIcs([londonEvent({ title: "Asr; jama'a, on\\time" })], { now });
 		expect(escaped).toContain("SUMMARY:Asr\\; jama'a\\, on\\\\time\r\n");
+	});
+
+	it("folds the VALARM DESCRIPTION by octets for a long Arabic title", () => {
+		const title = "صلاة العشاء في المسجد، ".repeat(4).slice(0, 60);
+		expect([...title]).toHaveLength(60);
+		const out = buildIcs([londonEvent({ reminderMin: 10, title })], { now });
+		for (const line of out.split("\r\n")) {
+			expect(new TextEncoder().encode(line).length).toBeLessThanOrEqual(75);
+		}
+		const unfolded = out.replace(/\r\n /g, "");
+		const description = unfolded.split("\r\n").find((l) => l.startsWith("DESCRIPTION:"));
+		expect(description).toBe(`DESCRIPTION:${escapeText(title)}`);
 	});
 
 	it("produces an exact document for a small input", () => {

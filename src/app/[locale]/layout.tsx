@@ -1,52 +1,52 @@
-import type { Metadata } from "next";
-import { Cairo, Geist, Geist_Mono } from "next/font/google";
+import { Amiri, Fraunces, IBM_Plex_Sans, IBM_Plex_Sans_Arabic } from "next/font/google";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { routing } from "@/i18n/routing";
 
-import "../globals.css";
+import Providers from "@/app/providers";
+import "@/app/globals.css";
 
-// Geist for Latin text, Cairo covers Arabic (with a matching Latin set).
-const geistSans = Geist({
-	variable: "--font-geist-sans",
+// One bilingual type system: Plex Sans + Plex Sans Arabic for text,
+// Fraunces + Amiri for headings. next/font self-hosts them (CSP font-src 'self').
+const plex = IBM_Plex_Sans({
+	variable: "--font-plex",
 	subsets: ["latin"],
+	weight: ["400", "500", "600"],
 });
 
-const geistMono = Geist_Mono({
-	variable: "--font-geist-mono",
+const plexArabic = IBM_Plex_Sans_Arabic({
+	variable: "--font-plex-arabic",
+	subsets: ["arabic"],
+	weight: ["400", "500", "600"],
+});
+
+const fraunces = Fraunces({
+	variable: "--font-fraunces",
 	subsets: ["latin"],
+	axes: ["opsz", "SOFT"],
 });
 
-const cairo = Cairo({
-	variable: "--font-cairo",
-	subsets: ["arabic", "latin"],
+const amiri = Amiri({
+	variable: "--font-amiri",
+	subsets: ["arabic"],
+	weight: ["400", "700"],
 });
+
+/**
+ * The root layout must read the locale for <html lang dir>, so it cannot be
+ * part of a shared instant shell. Each locale is still prerendered from
+ * generateStaticParams; only the dev-time instant-navigation check is opted
+ * out here (switching language is a full navigation anyway).
+ */
+export const instant = false;
+
+/** Absolute origin for canonical/hreflang links (search engines need absolute URLs). */
+const SITE_URL = (process.env.SITE_URL || "http://localhost:3000").replace(/\/$/, "");
 
 export function generateStaticParams() {
 	return routing.locales.map((locale) => ({ locale }));
-}
-
-export async function generateMetadata({
-	params,
-}: {
-	params: Promise<{ locale: string }>;
-}): Promise<Metadata> {
-	const { locale } = await params;
-	const t = await getTranslations({ locale, namespace: "app" });
-
-	return {
-		title: t("title"),
-		description: t("description"),
-		alternates: {
-			canonical: `/${locale}`,
-			languages: {
-				en: "/en",
-				ar: "/ar",
-			},
-		},
-	};
 }
 
 export default async function LocaleLayout({
@@ -61,15 +61,29 @@ export default async function LocaleLayout({
 		notFound();
 	}
 	setRequestLocale(locale);
+	const t = await getTranslations({ locale, namespace: "app" });
 
 	return (
 		<html
 			lang={locale}
 			dir={locale === "ar" ? "rtl" : "ltr"}
-			className={`${geistSans.variable} ${geistMono.variable} ${cairo.variable} h-full antialiased`}
+			className={`${plex.variable} ${plexArabic.variable} ${fraunces.variable} ${amiri.variable} h-full antialiased`}
 		>
 			<body className="flex min-h-full flex-col">
-				<NextIntlClientProvider>{children}</NextIntlClientProvider>
+				{/*
+				  Per-locale metadata as elements; React hoists them into <head>.
+				  A generateMetadata() that reads params is flagged by Partial
+				  Prefetching ("URL data in generateMetadata"), and the locale is
+				  already resolved here.
+				*/}
+				<title>{t("title")}</title>
+				<meta name="description" content={t("description")} />
+				<link rel="canonical" href={`${SITE_URL}/${locale}`} />
+				<link rel="alternate" hrefLang="en" href={`${SITE_URL}/en`} />
+				<link rel="alternate" hrefLang="ar" href={`${SITE_URL}/ar`} />
+				<Providers>
+					<NextIntlClientProvider>{children}</NextIntlClientProvider>
+				</Providers>
 			</body>
 		</html>
 	);

@@ -6,6 +6,13 @@
  */
 import { z } from "zod";
 
+import type { SyncConfig } from "@/lib/prayer-engine/types";
+
+// Our CSP has no 'unsafe-eval'. Zod v4 would otherwise probe `Function("")`
+// on first parse to decide whether to JIT validators; the CSP blocks it and
+// the browser logs an issue. Jitless mode skips the probe (same results).
+z.config({ jitless: true });
+
 export const prayerSchema = z.enum(["fajr", "dhuhr", "asr", "maghrib", "isha"]);
 export type PrayerValue = z.infer<typeof prayerSchema>;
 
@@ -58,19 +65,27 @@ export const timeWindowSchema = z
 	.object({
 		startMin: z.number().int().min(0).max(1439),
 		endMin: z.number().int().min(0).max(1439),
-	});
+	})
+	// An empty window would silently skip every prayer.
+	.refine((window) => window.startMin !== window.endMin, "Window start and end must differ");
 
 const clockTime = z.string().regex(/^\d{2}:\d{2}$/).refine((value) => {
 	const [h, m] = value.split(":").map(Number);
 	return h <= 23 && m <= 59;
 }, "Must be a valid HH:MM clock time");
 
-export const jummahRuleSchema = z.object({
-	mode: z.enum(["same", "fixed", "custom", "none"]),
-	fixedTime: clockTime.optional(),
-	offsetMin: z.number().int().min(-180).max(180).optional(),
-	durationMin: z.number().int().min(5).max(180).optional(),
-});
+export const jummahRuleSchema = z
+	.object({
+		mode: z.enum(["same", "fixed", "custom", "none"]),
+		fixedTime: clockTime.optional(),
+		offsetMin: z.number().int().min(-180).max(180).optional(),
+		durationMin: z.number().int().min(5).max(180).optional(),
+	})
+	// The engine throws on "fixed" without a time; reject it at the boundary.
+	.refine((rule) => rule.mode !== "fixed" || rule.fixedTime !== undefined, {
+		message: "A fixed Friday time needs fixedTime",
+		path: ["fixedTime"],
+	});
 
 export const oooRuleSchema = z.object({
 	enabled: z.boolean(),
@@ -86,13 +101,16 @@ export const syncConfigSchema = z.object({
 		latitude: z.number().min(-90).max(90),
 		longitude: z.number().min(-180).max(180),
 		// Present once a place is chosen (engine types gained these in PR 5a).
-		timezone: z.string().optional(),
-		label: z.string().optional(),
+		timezone: timezoneName.optional(),
+		label: z.string().max(120).optional(),
 	}),
 	method: z.number().int().min(1).max(30),
 	school: z.enum(["standard", "hanafi"]),
 	prayers: z.record(prayerSchema, prayerRuleSchema),
-	days: z.array(z.number().int().min(0).max(6)).max(7),
+	days: z
+		.array(z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6)]))
+		.max(7)
+		.refine((days) => new Set(days).size === days.length, "Days must not repeat"),
 	defaults: ruleDefaultsSchema,
 	rounding: roundingSchema,
 	window: timeWindowSchema.optional(),
@@ -104,6 +122,12 @@ export const syncConfigSchema = z.object({
 });
 
 export type SyncConfigValue = z.infer<typeof syncConfigSchema>;
+
+// Compile-time guard: the schema and the engine type must describe the same
+// shape. If either side changes alone, `tsc` fails here.
+type Exact<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
+const schemaMatchesEngine: Exact<SyncConfigValue, SyncConfig> = true;
+void schemaMatchesEngine;
 
 /** `POST /api/prayers/preview` request (plan §4.10: timings for a range). */
 export const previewRequestSchema = z.object({
