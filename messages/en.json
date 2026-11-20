@@ -205,7 +205,6 @@
 		"heading": "Download a file (.ics)",
 		"body": "Works in Outlook, Apple Calendar and Google Calendar. No sign-in.",
 		"snapshot": "A one-year snapshot. To change your rules, download again and import the new file: apps that match events by ID update them, but events you have since turned off stay until you delete them.",
-		"separateCalendar": "Tip: import it into a new, separate calendar so you can remove everything in one go.",
 		"noVacationSkip": "Vacation skip needs Google sync; the file includes every day.",
 		"download": "Download",
 		"downloadAgain": "Download again",
@@ -215,6 +214,14 @@
 		"error": "Could not get the prayer times. Please try again.",
 		"usedLocal": "Some months were calculated on our server because the prayer-times service was unavailable; times may differ by a minute or two.",
 		"empty": "Nothing to export: every prayer or every day is turned off.",
-		"progressLabel": "Download progress"
+		"progressLabel": "Download progress",
+		"contains": "In the file:",
+		"importHeading": "Import into its own calendar",
+		"importIntro": "Google Calendar adds imported events to the calendar you pick, which is your main one unless you change it. To keep them separate:",
+		"importGoogleCreate": "Create a calendar named {name}: Settings → Add calendar → Create new calendar.",
+		"importGoogleImport": "Settings → Import & export → Import: choose the file, and under “Add to calendar” pick {name}.",
+		"importGoogleRemove": "To remove everything later, delete the {name} calendar.",
+		"importApple": "Apple Calendar: open the file and choose New Calendar.",
+		"importOutlook": "Outlook: Add calendar → Upload from file, then pick a calendar."
 	}
 }

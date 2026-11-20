@@ -11,7 +11,7 @@
 import { useLocale, useTranslations } from "next-intl";
 import { Download, LoaderCircle } from "lucide-react";
 
-import type { SyncConfig } from "@/lib/prayer-engine/types";
+import { PRAYERS, type SyncConfig } from "@/lib/prayer-engine/types";
 
 import { calendarNameFor, progressFraction } from "./icsFile";
 import { useIcsDownload } from "./useIcsDownload";
@@ -39,8 +39,15 @@ function formatRange(from: string, to: string, locale: string): string {
 
 export default function DownloadCard({ config, placeSet, problemId }: DownloadCardProps) {
 	const t = useTranslations("ics");
+	const tPrayers = useTranslations("prayers");
 	const locale = useLocale();
-	const { state, start } = useIcsDownload(config, calendarNameFor(config.titleLocale));
+	const calendarName = calendarNameFor(config.titleLocale);
+	// Say what the file will hold before it is made: settings live in memory
+	// only, so a reload quietly brings back all five prayers.
+	const included = PRAYERS.filter((prayer) => config.prayers[prayer].enabled).map((prayer) =>
+		tPrayers(`prayer.${prayer}`),
+	);
+	const { state, start } = useIcsDownload(config, calendarName);
 	const working = state.status === "working";
 
 	return (
@@ -49,9 +56,29 @@ export default function DownloadCard({ config, placeSet, problemId }: DownloadCa
 			<p className="text-sm text-muted">{t("body")}</p>
 			<ul className="flex list-disc flex-col gap-1 ps-5 text-sm text-muted">
 				<li>{t("snapshot")}</li>
-				<li>{t("separateCalendar")}</li>
 				{config.ooo.enabled ? <li>{t("noVacationSkip")}</li> : null}
 			</ul>
+			<details className="text-sm text-muted">
+				<summary className="cursor-pointer font-medium text-ink">{t("importHeading")}</summary>
+				<div className="flex flex-col gap-2 pt-2">
+					<p>{t("importIntro")}</p>
+					<ol className="flex list-decimal flex-col gap-1 ps-5">
+						<li>{t("importGoogleCreate", { name: calendarName })}</li>
+						<li>{t("importGoogleImport", { name: calendarName })}</li>
+						<li>{t("importGoogleRemove", { name: calendarName })}</li>
+					</ol>
+					<p>{t("importApple")}</p>
+					<p>{t("importOutlook")}</p>
+				</div>
+			</details>
+			{included.length > 0 ? (
+				<p className="text-sm">
+					<span className="text-muted">{t("contains")}</span>{" "}
+					<span className="font-medium text-ink">
+						{new Intl.ListFormat(locale, { type: "conjunction" }).format(included)}
+					</span>
+				</p>
+			) : null}
 			<div className="mt-auto flex flex-col items-start gap-1.5 pt-2">
 				<button
 					type="button"
