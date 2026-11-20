@@ -3,10 +3,10 @@
 /**
  * MiniPreview (plan §6 wireframe, side panel): today's five prayers for the
  * chosen place, run through the same engine as the week preview, so every
- * rule change shows up here at once. Each row shows the adhan time, and
- * under it when the event starts (offset, rounding, Jummah applied) or why
- * the prayer is off or skipped today. Showing only the event time read as
- * "wrong prayer times" (it is the adhan plus the offset).
+ * rule change shows up here at once. Each row shows the real adhan time.
+ * A second line appears only when the event does not sit on the adhan (the
+ * user moved it: offset, rounding, a fixed Friday time) or the prayer is
+ * off or skipped today.
  */
 import { useTranslations } from "next-intl";
 
@@ -72,12 +72,15 @@ function MiniPreviewToday({ today }: { today: string }) {
 				<p className="text-sm text-muted">{t("loading")}</p>
 			) : (
 				<>
-					<p className="text-xs text-muted">{t("caption")}</p>
 					<ul className="flex flex-col divide-y divide-line text-sm">
 						{PRAYERS.map((prayer) => {
 							const event = plan.events.find((e) => e.prayer === prayer);
 							const skipped = plan.skipped.find((s) => s.prayer === prayer);
 							const off = skipped?.reason === "prayer-off";
+							const adhanTime = adhan?.[prayer];
+							const eventTime = event?.startLocal.slice(11, 16);
+							const eventDate = event?.startLocal.slice(0, 10);
+							const moved = event !== undefined && (eventTime !== adhanTime || eventDate !== today);
 							return (
 								<li key={prayer} className="flex items-center gap-2 py-1.5">
 									<span aria-hidden className="w-5 text-center">
@@ -87,31 +90,31 @@ function MiniPreviewToday({ today }: { today: string }) {
 										{tPrayers(`prayer.${prayer}`)}
 									</span>
 									<span className="ms-auto flex flex-col items-end tabular-nums">
-										{adhan?.[prayer] ? (
+										{adhanTime ? (
 											<span className={event ? "font-medium" : "text-muted"}>
 												<span className="sr-only">{t("adhan")} </span>
-												<bdi dir="ltr">{adhan[prayer]}</bdi>
+												<bdi dir="ltr">{adhanTime}</bdi>
 											</span>
 										) : null}
-										<span className="text-xs text-muted">
-											{event ? (
-												<>
-													{t("eventAt")} <bdi dir="ltr">{event.startLocal.slice(11, 16)}</bdi>
-													{/* An offset can push the event past midnight either way. */}
-													{event.startLocal.slice(0, 10) > today
-														? ` ${t("nextDay")}`
-														: event.startLocal.slice(0, 10) < today
-															? ` ${t("previousDay")}`
-															: null}
-												</>
-											) : off ? (
-												t("off")
-											) : skipped ? (
-												tPreview(`skipReason.${skipped.reason}`)
-											) : (
-												t("skipped")
-											)}
-										</span>
+										{moved ? (
+											<span className="text-xs text-muted">
+												{t("eventAt")} <bdi dir="ltr">{eventTime}</bdi>
+												{/* An offset can push the event past midnight either way. */}
+												{eventDate !== undefined && eventDate > today
+													? ` ${t("nextDay")}`
+													: eventDate !== undefined && eventDate < today
+														? ` ${t("previousDay")}`
+														: null}
+											</span>
+										) : event ? null : (
+											<span className="text-xs text-muted">
+												{off
+													? t("off")
+													: skipped
+														? tPreview(`skipReason.${skipped.reason}`)
+														: t("skipped")}
+											</span>
+										)}
 									</span>
 								</li>
 							);

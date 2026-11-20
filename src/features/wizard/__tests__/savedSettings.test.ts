@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { defaultConfig, useWizardConfig } from "@/features/wizard/configStore";
-import { restoreSettings, safeLocalStorage, SETTINGS_KEY } from "@/features/wizard/savedSettings";
+import { migrateSettings, restoreSettings, safeLocalStorage, SETTINGS_KEY } from "@/features/wizard/savedSettings";
 
 function memoryStorage() {
 	const data = new Map<string, string>();
@@ -164,7 +164,7 @@ describe("the wizard store with saved settings", () => {
 	});
 
 	it("loads saved Dhuhr-and-Asr settings into the store", async () => {
-		storage.setItem(SETTINGS_KEY, JSON.stringify({ state: { config: dhuhrAsrOnly, titleLocaleChosen: false, methodChosen: true }, version: 1 }));
+		storage.setItem(SETTINGS_KEY, JSON.stringify({ state: { config: dhuhrAsrOnly, titleLocaleChosen: false, methodChosen: true }, version: 2 }));
 		await useWizardConfig.persist.rehydrate();
 		const { config, methodChosen } = useWizardConfig.getState();
 		expect(config.prayers.isha.enabled).toBe(false);
@@ -175,7 +175,7 @@ describe("the wizard store with saved settings", () => {
 	});
 
 	it("keeps the defaults when the saved data is broken", async () => {
-		storage.setItem(SETTINGS_KEY, JSON.stringify({ state: { config: { method: "x" } }, version: 1 }));
+		storage.setItem(SETTINGS_KEY, JSON.stringify({ state: { config: { method: "x" } }, version: 2 }));
 		await useWizardConfig.persist.rehydrate();
 		expect(useWizardConfig.getState().config).toEqual(defaultConfig);
 
@@ -189,5 +189,58 @@ describe("the wizard store with saved settings", () => {
 		useWizardConfig.getState().reset();
 		await useWizardConfig.persist.rehydrate();
 		expect(useWizardConfig.getState().config).toEqual(defaultConfig);
+	});
+});
+
+describe("migrateSettings (v1 → v2: events at the adhan by default)", () => {
+	const v1Defaults = {
+		...defaultConfig,
+		defaults: { ...defaultConfig.defaults, offsetMin: 15 },
+		jummah: { mode: "fixed", fixedTime: "12:30", durationMin: 60 },
+	};
+	type Stored = { config: typeof defaultConfig; methodChosen?: boolean };
+
+	it("moves the untouched old defaults to the adhan", () => {
+		const migrated = migrateSettings({ config: v1Defaults, methodChosen: true }, 1) as Stored;
+		expect(migrated.config.defaults.offsetMin).toBe(0);
+		expect(migrated.config.jummah.mode).toBe("same");
+		expect(migrated.methodChosen).toBe(true);
+	});
+
+	it("keeps values the user set", () => {
+		const custom = {
+			...v1Defaults,
+			defaults: { ...v1Defaults.defaults, offsetMin: 10 },
+			jummah: { mode: "fixed", fixedTime: "13:15", durationMin: 60 },
+		};
+		const migrated = migrateSettings({ config: custom }, 1) as Stored;
+		expect(migrated.config.defaults.offsetMin).toBe(10);
+		expect(migrated.config.jummah).toEqual({ mode: "fixed", fixedTime: "13:15", durationMin: 60 });
+	});
+
+	it("leaves current or unreadable data alone", () => {
+		const current = { config: v1Defaults };
+		expect(migrateSettings(current, 2)).toBe(current);
+		expect(migrateSettings(null, 1)).toBeNull();
+	});
+
+	it("is applied when the store loads version-1 settings", async () => {
+		const data = new Map<string, string>();
+		vi.stubGlobal("localStorage", {
+			getItem: (k: string) => data.get(k) ?? null,
+			setItem: (k: string, v: string) => void data.set(k, v),
+			removeItem: (k: string) => void data.delete(k),
+		});
+		data.set(
+			SETTINGS_KEY,
+			JSON.stringify({ state: { config: v1Defaults, titleLocaleChosen: false, methodChosen: false }, version: 1 }),
+		);
+		try {
+			await useWizardConfig.persist.rehydrate();
+			expect(useWizardConfig.getState().config.defaults.offsetMin).toBe(0);
+			expect(useWizardConfig.getState().config.jummah.mode).toBe("same");
+		} finally {
+			vi.unstubAllGlobals();
+		}
 	});
 });

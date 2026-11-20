@@ -26,7 +26,8 @@ The code lives in the git repo `hijri-js/salat-calendar`. `instructions.md` and 
 | Re-sync          | Replaces earlier salat-calendar events by default; user can turn "replace" off                                                                         |
 | Rule detail      | Global default offset/duration/Busy-Free, optional per-prayer override                                                                                 |
 | Rounding         | Off, or snap to a 5 / 10 minute grid; user picks direction: nearest (default), up, or down                                                             |
-| Friday           | Four choices: same as Dhuhr, fixed time, custom offset/length, or **no Friday slot**                                                                   |
+| Friday           | Four choices: same as Dhuhr (**default**), fixed time, custom offset/length, or **no Friday slot**                                                                   |
+| Default timing   | Events start **exactly at the adhan** (offset 0) and Friday Dhuhr follows its adhan; nothing moves unless the user shifts it. The Place step shows only the real adhan times; a second line appears only for a prayer the user moved or that is skipped |
 | OOO skip         | All-day OOO removes the whole day; timed OOO removes only overlapping prayers; keyword list editable                                                   |
 | Target calendar  | Dedicated "Salat" calendar by default; primary optional, extra permission asked only then                                                              |
 | Second output    | Download a static `.ics` file for the same rules, no login (see 4.10)                                                                                  |
@@ -479,7 +480,7 @@ flowchart LR
 │  ┌─────────────────────────────────────────────────────────────┐     │
 │  │ [✓] 🌅 Fajr       Busy ▾                      [Customise ▸] │     │
 │  │ [✓] ☀️ Dhuhr      Busy ▾                      [Customise ▾] │     │
-│  │      Offset [+15] min  Length [20] min                      │     │
+│  │      Offset [ +0] min  Length [20] min                      │     │
 │  │      Emoji [☀️]  Title [Dhuhr            ]                  │     │
 │  │ [✓] 🌤️ Asr        Busy ▾                      [Customise ▸] │     │
 │  │ [ ] 🌇 Maghrib                                              │     │
@@ -494,7 +495,7 @@ flowchart LR
 
 ```
 │  Default for all prayers                                             │
-│  Start [+15] min after adhan      Length [20] min                    │
+│  Start [ +0] min after adhan      Length [20] min                    │
 │                                                                      │
 │  [✓] Snap start to the clock   grid (•) 5 min ( ) 10 min             │
 │      direction (•) Nearest  ( ) Up  ( ) Down      11:41 → 11:40      │
@@ -503,8 +504,8 @@ flowchart LR
 │      London Maghrib: 15:53 in Dec ✓   21:21 in Jun ✗                 │
 │                                                                      │
 │  Friday (Jummah)                                                     │
-│  ( ) Same as Dhuhr                                                   │
-│  (•) Fixed time   [12:30]   Length [60] min                          │
+│  (•) Same as Dhuhr                                                   │
+│  ( ) Fixed time   [12:30]   Length [60] min                          │
 │  ( ) Custom       Start [+0] min   Length [45] min                   │
 │  ( ) No Friday slot           e.g. Friday is a day off               │
 │                                         [ ◀ Back ]  [ Next ▶ ]       │
@@ -575,11 +576,11 @@ flowchart LR
 ┌──────────────────────┐   ┌──────────────────────────────────────────┐
 │ 🕌 salat-calendar  EN|ع │   │ GitHub  [EN | ع]              salat-calendar 🕌 │
 │ ①②❸④⑤⑥  Timing      │   │        ○━━━━━○━━━━━○━━━━━○━━━━━●━━━━━○    │
-│ Start [+15] min      │   │                             أي الصلوات؟  │
+│ Start [ +0] min      │   │                             أي الصلوات؟  │
 │ Length [20] min      │   │ [◂ تخصيص]            ▾ مشغول  الفجر 🌅 [✓] │
 │ [✓] Snap 5 · Nearest │   │ [◂ تخصيص]            ▾ مشغول  الظهر ☀️ [✓] │
 │ [✓] 08:00 to 16:00   │   │ [◂ تخصيص]            ▾ مشغول  العصر 🌤️ [✓] │
-│ Jummah (•) 12:30     │   │                               المغرب 🌇 [ ] │
+│ Jummah: as Dhuhr     │   │                               المغرب 🌇 [ ] │
 │                      │   │                               العشاء 🌙 [ ] │
 │ [👁 Preview · 3/day] │   │                                          │
 │ [◀ Back]   [Next ▶]  │   │       [ ◀ التالي ]  [ السابق ▶ ]          │
@@ -795,7 +796,7 @@ flowchart LR
 
 - `next-intl`, RTL layout, stepper with free navigation, six steps, defaults, validity marks, Zustand store, `WeekGrid`, `MiniPreview`, city search, GPS.
 - Also in this PR: engine, fallback and schema fixes; preview API hardening; security headers; CI fixes; UI/UX restyle with native HTML elements and Lucide icons ([ADR 0001](adr/0001-native-ui-over-shadcn.md)).
-- **Check (browser):** `/en` and `/ar`; jump between steps in any order; the "pick a city" reason is visible until a place is set, and the final buttons say "Coming soon" until PR 6 and PR 7 wire them; London + 08:00–16:00 with offset 0 hides Maghrib in June (21:20) and shows it in December (15:52) — with the default +15 min offset December Maghrib starts at 16:07 and is correctly skipped too; "No Friday slot" removes Friday Dhuhr; keyboard-only pass; phone width has no sideways scroll.
+- **Check (browser):** `/en` and `/ar`; jump between steps in any order; the "pick a city" reason is visible until a place is set, and the final buttons say "Coming soon" until PR 6 and PR 7 wire them; London + 08:00–16:00 with offset 0 hides Maghrib in June (21:20) and shows it in December (15:52) — with a +15 min offset December Maghrib starts at 16:07 and is correctly skipped too (the default offset is 0 since PR 6.5); "No Friday slot" removes Friday Dhuhr; keyboard-only pass; phone width has no sideways scroll.
 
 ### PR 6: `.ics` download
 

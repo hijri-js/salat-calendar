@@ -30,7 +30,7 @@ import {
 	type Weekday,
 } from "@/lib/prayer-engine/types";
 
-import { restoreSettings, safeLocalStorage, SETTINGS_KEY, SETTINGS_VERSION } from "./savedSettings";
+import { migrateSettings, restoreSettings, safeLocalStorage, SETTINGS_KEY, SETTINGS_VERSION } from "./savedSettings";
 
 /** Working defaults for every wizard setting (plan §2 and §6 wireframes). */
 export const defaultConfig: SyncConfig = {
@@ -46,13 +46,16 @@ export const defaultConfig: SyncConfig = {
 	},
 	days: [0, 1, 2, 3, 4, 5, 6],
 	defaults: {
-		offsetMin: 15,
+		// Events sit exactly on the adhan until the user moves them.
+		offsetMin: 0,
 		durationMin: 20,
 		transparency: "opaque", // Busy
 	},
 	rounding: { grid: "off", direction: "nearest" },
 	// No window: the key is absent until the user enables one.
-	jummah: { mode: "fixed", fixedTime: "12:30", durationMin: 60 },
+	// Friday Dhuhr follows its adhan like any day; the fixed time and length
+	// are kept only to prefill the "Fixed time" choice.
+	jummah: { mode: "same", fixedTime: "12:30", durationMin: 60 },
 	ooo: {
 		enabled: true,
 		keywords: ["Vacation", "OOO", "Out of Office", "Flight", "إجازة"],
@@ -173,6 +176,7 @@ export const useWizardConfig = create<WizardState>()(
 		{
 			name: SETTINGS_KEY,
 			version: SETTINGS_VERSION,
+			migrate: (stored, fromVersion) => migrateSettings(stored, fromVersion) as WizardState,
 			storage: createJSONStorage(() => safeLocalStorage),
 			// Settings only; actions are code, and nothing else belongs on disk.
 			partialize: ({ config, titleLocaleChosen, methodChosen }) => ({ config, titleLocaleChosen, methodChosen }),

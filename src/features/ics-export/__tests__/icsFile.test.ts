@@ -74,8 +74,8 @@ describe("buildYearIcs", () => {
 
 	it("plans every enabled prayer and counts the events", () => {
 		const result = buildYearIcs([day("2026-11-19"), day("2026-11-20")], LONDON, { now, calendarName: "Salat" });
-		// 5 prayers × 2 days; Nov 20 2026 is a Friday, so Dhuhr becomes the
-		// fixed 12:30 Jummah, still one event.
+		// 5 prayers × 2 days; Nov 20 2026 is a Friday, and Dhuhr stays on its
+		// adhan by default, still one event.
 		expect(result.eventCount).toBe(10);
 		expect(result.text.match(/BEGIN:VEVENT/g)).toHaveLength(10);
 		expect(result.text).toContain("X-WR-CALNAME:Salat");
@@ -93,9 +93,9 @@ describe("buildYearIcs", () => {
 
 	it("keeps wall-clock times across the London DST change (Mar 28 2027)", () => {
 		const result = buildYearIcs([day("2027-03-27"), day("2027-03-29")], LONDON, { now });
-		// Fajr 05:10 + 15 min offset = 05:25 local: GMT before, BST (UTC+1) after.
-		expect(result.text).toContain("DTSTART:20270327T052500Z");
-		expect(result.text).toContain("DTSTART:20270329T042500Z");
+		// Fajr at the 05:10 adhan (default offset 0): GMT before, BST (UTC+1) after.
+		expect(result.text).toContain("DTSTART:20270327T051000Z");
+		expect(result.text).toContain("DTSTART:20270329T041000Z");
 	});
 });
 

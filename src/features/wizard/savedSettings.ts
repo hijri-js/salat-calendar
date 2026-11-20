@@ -14,13 +14,34 @@ import { syncConfigSchema } from "@/lib/sync/schema";
 import type { SyncConfig } from "@/lib/prayer-engine/types";
 
 export const SETTINGS_KEY = "salat-calendar:settings";
-/** Bump when the stored shape changes in a way old data cannot satisfy. */
-export const SETTINGS_VERSION = 1;
+/** Bump when stored data needs `migrateSettings` to be read correctly. */
+export const SETTINGS_VERSION = 2;
 
 export interface SavedSettings {
 	config: SyncConfig;
 	titleLocaleChosen: boolean;
 	methodChosen: boolean;
+}
+
+/**
+ * Bring settings saved by an older version up to date. Version 1 started
+ * events 15 min after the adhan and put Friday Dhuhr at a fixed 12:30 by
+ * default; version 2 starts them at the adhan. Only values still equal to
+ * those old defaults are changed; anything the user set stays as it was.
+ */
+export function migrateSettings(stored: unknown, fromVersion: number): unknown {
+	if (fromVersion >= 2 || !isRecord(stored) || !isRecord(stored.config)) {
+		return stored;
+	}
+	const config = { ...stored.config };
+	if (isRecord(config.defaults) && config.defaults.offsetMin === 15) {
+		config.defaults = { ...config.defaults, offsetMin: 0 };
+	}
+	const jummah = config.jummah;
+	if (isRecord(jummah) && jummah.mode === "fixed" && jummah.fixedTime === "12:30" && jummah.durationMin === 60) {
+		config.jummah = { ...jummah, mode: "same" };
+	}
+	return { ...stored, config };
 }
 
 /** Limits shared with the UI so it cannot produce settings the contract rejects. */

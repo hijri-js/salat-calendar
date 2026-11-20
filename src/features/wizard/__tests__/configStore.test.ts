@@ -28,14 +28,14 @@ describe("defaults (plan §2/§6)", () => {
 		});
 		expect(config.days).toEqual([0, 1, 2, 3, 4, 5, 6]);
 		expect(config.defaults).toEqual({
-			offsetMin: 15,
+			offsetMin: 0,
 			durationMin: 20,
 			transparency: "opaque",
 		});
 		expect(config.rounding).toEqual({ grid: "off", direction: "nearest" });
 		expect(config.window).toBeUndefined();
 		expect(config.jummah).toEqual({
-			mode: "fixed",
+			mode: "same",
 			fixedTime: "12:30",
 			durationMin: 60,
 		});
