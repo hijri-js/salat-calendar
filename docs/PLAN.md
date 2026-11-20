@@ -802,6 +802,7 @@ flowchart LR
 - `ics.ts` (pure, tested: line folding, escaping, UTC conversion across DST, fixed UIDs), download card.
 - **Code done; manual import check pending:** `ics.ts` (PR 18); the download in PR 6: `icsFile.ts` (rolling-year window, month chunks, file name, engine → file; tested), `useIcsDownload.ts` (one cached preview request per month, so each stays inside the Worker limits and shows progress), `DownloadCard` on the Get it step.
 - **Check:** import the file into Google Calendar and one other app; times match the preview on a DST-change week.
+- **PR 6.1 follow-up:** a day-based progress bar with a percentage on the download card; the server pauses AlAdhan for 30 s after a timeout or 5xx (not only after a 429), so an outage costs one 10 s wait instead of one per month; the file gains `METHOD:PUBLISH` and a growing `SEQUENCE`, so apps that match by UID update events on re-import.
 
 ### PR 7: Google connect and sync
 

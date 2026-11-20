@@ -7,6 +7,7 @@ import {
 	daysBetweenInclusive,
 	getTimingsForRange,
 	listMonths,
+	OUTAGE_PAUSE_MS,
 	PREVIEW_MAX_DAYS,
 	RATE_LIMIT_PAUSE_MS,
 	resetRateLimitPauseForTest,
@@ -123,6 +124,60 @@ describe("getTimingsForRange", () => {
 		const days = await getTimingsForRange(request, { cache: new MemoryTimingsCache(), fetchMonth: healthy, normalize, computeLocal, now });
 		expect(healthy).toHaveBeenCalledTimes(1);
 		expect(days.every((d) => d.source === "aladhan")).toBe(true);
+	});
+
+	it.each([
+		["a timeout or network failure", new ApiError("NETWORK", "timed out")],
+		["a 502", new ApiError("SERVER", "bad gateway", 502)],
+	])("pauses AlAdhan for 30 s after %s, so later months fall back at once", async (_label, failure) => {
+		let clock = 1_000_000;
+		const now = () => clock;
+		const computeLocal = vi.fn(() => makeDays(2026, 11, 30, "local"));
+		const down = vi.fn(async () => {
+			throw failure;
+		});
+		const crossMonth = { ...request, from: "2026-11-01", to: "2027-01-31" };
+		await getTimingsForRange(crossMonth, { cache: new MemoryTimingsCache(), fetchMonth: down, computeLocal, now });
+		// Three months touched, but only the first one waited on AlAdhan.
+		expect(down).toHaveBeenCalledTimes(1);
+		expect(computeLocal).toHaveBeenCalledTimes(3);
+
+		const healthy = vi.fn(async () => ({}));
+		const normalize = vi.fn(() => makeDays(2026, 11, 30));
+		clock += OUTAGE_PAUSE_MS - 1;
+		await getTimingsForRange(request, { cache: new MemoryTimingsCache(), fetchMonth: healthy, normalize, computeLocal, now });
+		expect(healthy).not.toHaveBeenCalled();
+
+		clock += 1;
+		await getTimingsForRange(request, { cache: new MemoryTimingsCache(), fetchMonth: healthy, normalize, computeLocal, now });
+		expect(healthy).toHaveBeenCalledTimes(1);
+	});
+
+	it("does not pause after a 4xx or an unexpected response shape", async () => {
+		const computeLocal = vi.fn(() => makeDays(2026, 11, 30, "local"));
+		for (const failure of [new ApiError("SERVER", "bad request", 400), new ApiError("UNEXPECTED", "not json")]) {
+			const fetchMonth = vi.fn(async () => {
+				throw failure;
+			});
+			await getTimingsForRange(
+				{ ...request, from: "2026-11-01", to: "2026-12-31" },
+				{ cache: new MemoryTimingsCache(), fetchMonth, computeLocal },
+			);
+			// Both months still asked AlAdhan.
+			expect(fetchMonth).toHaveBeenCalledTimes(2);
+		}
+	});
+
+	it("does not pause after an error that is not an ApiError", async () => {
+		const computeLocal = vi.fn(() => makeDays(2026, 11, 30, "local"));
+		const fetchMonth = vi.fn(async () => {
+			throw new TypeError("boom");
+		});
+		await getTimingsForRange(
+			{ ...request, from: "2026-11-01", to: "2026-12-31" },
+			{ cache: new MemoryTimingsCache(), fetchMonth, computeLocal },
+		);
+		expect(fetchMonth).toHaveBeenCalledTimes(2);
 	});
 
 	it("sends coordinates rounded to 2 decimals, matching the cache key", async () => {

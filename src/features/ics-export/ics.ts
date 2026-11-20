@@ -150,12 +150,26 @@ function formatUtcBasic(instant: number): string {
 	return `${new Date(instant).toISOString().slice(0, 19).replace(/[-:]/g, "")}Z`;
 }
 
+/** 2026-01-01T00:00Z: the zero point for SEQUENCE. */
+const SEQUENCE_EPOCH = Date.UTC(2026, 0, 1);
+
+/**
+ * RFC 5545 SEQUENCE: minutes since 2026-01-01 at download time. A newer
+ * file always carries a higher number, so apps that match events by UID
+ * (Outlook, Apple) treat a re-import as an update, not a duplicate. Fits a
+ * signed 32-bit integer for thousands of years.
+ */
+export function sequenceFor(now: Date): number {
+	return Math.max(0, Math.floor((now.getTime() - SEQUENCE_EPOCH) / 60_000));
+}
+
 /** The lines of one VEVENT (unfolded; joined with CRLF by `buildIcs`). */
 function eventLines(event: PlannedEvent, now: Date): string[] {
 	const lines = [
 		"BEGIN:VEVENT",
 		`UID:${event.id}@salat-calendar`,
 		`DTSTAMP:${formatUtcBasic(now.getTime())}`,
+		`SEQUENCE:${sequenceFor(now)}`,
 		`DTSTART:${formatUtcBasic(toUtc(event.startLocal, event.timezone))}`,
 		`DTEND:${formatUtcBasic(toUtc(event.endLocal, event.timezone))}`,
 		...foldLine(`SUMMARY:${escapeText(event.title)}`).split("\r\n"),
@@ -186,6 +200,8 @@ export function buildIcs(events: readonly PlannedEvent[], options: IcsOptions = 
 		"VERSION:2.0",
 		"PRODID:-//salat-calendar//EN",
 		"CALSCALE:GREGORIAN",
+		// A published snapshot, not a meeting request (RFC 5546).
+		"METHOD:PUBLISH",
 	];
 	if (options.calendarName !== undefined) {
 		lines.push(...foldLine(`X-WR-CALNAME:${escapeText(options.calendarName)}`).split("\r\n"));

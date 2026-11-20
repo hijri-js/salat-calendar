@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { defaultConfig } from "@/features/wizard";
-import { buildYearIcs, calendarNameFor, icsFileName, monthChunks, todayIn, yearRange } from "@/features/ics-export/icsFile";
+import { buildYearIcs, calendarNameFor, chunkDays, icsFileName, progressFraction, monthChunks, todayIn, yearRange } from "@/features/ics-export/icsFile";
 import type { DayTimings, SyncConfig } from "@/lib/prayer-engine/types";
 
 const LONDON: SyncConfig = {
@@ -103,5 +103,21 @@ describe("calendarNameFor", () => {
 	it("names the calendar in the event-title language", () => {
 		expect(calendarNameFor("en")).toBe("Salat");
 		expect(calendarNameFor("ar")).toBe("الصلاة");
+	});
+});
+
+describe("chunkDays / progressFraction", () => {
+	it("counts inclusive days, and the chunks of a year add up to the year", () => {
+		expect(chunkDays({ from: "2026-11-19", to: "2026-11-30" })).toBe(12);
+		expect(chunkDays({ from: "2027-02-01", to: "2027-02-28" })).toBe(28);
+		const total = monthChunks("2026-11-19", "2027-11-18").reduce((sum, c) => sum + chunkDays(c), 0);
+		expect(total).toBe(365);
+	});
+
+	it("is a 0..1 share and safe for an empty total", () => {
+		expect(progressFraction(0, 365)).toBe(0);
+		expect(progressFraction(73, 365)).toBeCloseTo(0.2);
+		expect(progressFraction(400, 365)).toBe(1);
+		expect(progressFraction(5, 0)).toBe(0);
 	});
 });
