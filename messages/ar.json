@@ -85,7 +85,12 @@
 		"emojiLabel": "الرمز",
 		"titleLabel": "عنوان مخصص",
 		"titlePlaceholder": "مثال: الظهر",
-		"transparencyLabel": "مشغول أم متفرغ لـ {prayer}"
+		"transparencyLabel": "مشغول أم متفرغ لـ {prayer}",
+		"hint": "ألغِ تحديد الصلاة لإزالتها من تقويمك تمامًا. «مشغول» أو «متفرغ» يحدد فقط إن كان الحدث يحجز وقتك.",
+		"colInclude": "تضمين",
+		"colPrayer": "الصلاة",
+		"colShowAs": "يظهر كـ",
+		"customiseFor": "تخصيص {prayer}"
 	},
 	"timing": {
 		"heading": "الافتراضي لكل الصلوات",
