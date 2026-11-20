@@ -33,6 +33,7 @@ export default function StepCalendar({ onBack, onNext }: StepCalendarProps) {
 	const updateDefaults = useWizardConfig((s) => s.updateDefaults);
 	const setReplaceExisting = useWizardConfig((s) => s.setReplaceExisting);
 
+	const selectedColour = GOOGLE_COLORS.find((color) => color.id === config.defaults.colorId);
 	const [keyword, setKeyword] = useState("");
 
 	const addKeyword = (event: FormEvent) => {
@@ -78,26 +79,42 @@ export default function StepCalendar({ onBack, onNext }: StepCalendarProps) {
 				</label>
 			</fieldset>
 
+			<fieldset className="flex flex-col gap-2 text-sm">
+				<legend className="mb-2">
+					{t("colourLabel")}:{" "}
+					{/* The chosen name is a visual echo; the checked radio already says it. */}
+					<span aria-hidden className="font-medium">
+						{selectedColour ? (locale === "ar" ? selectedColour.ar : selectedColour.en) : t("colourDefault")}
+					</span>
+				</legend>
+				{/* Swatches are radios: arrow keys move between them, and each has
+				    its colour name as its accessible label. */}
+				<div className="flex flex-wrap gap-1.5">
+					{[{ id: "", en: t("colourDefault"), ar: t("colourDefault"), hex: "" }, ...GOOGLE_COLORS].map((color) => (
+						<label
+							key={color.id || "default"}
+							title={locale === "ar" ? color.ar : color.en}
+							className="touch-target inline-flex size-9 cursor-pointer items-center justify-center rounded-full has-checked:ring-2 has-checked:ring-ink has-checked:ring-offset-2 has-checked:ring-offset-paper has-focus-visible:outline-2 has-focus-visible:outline-offset-4 has-focus-visible:outline-accent"
+						>
+							<input
+								type="radio"
+								name="event-colour"
+								className="sr-only"
+								checked={(selectedColour?.id ?? "") === color.id}
+								onChange={() => updateDefaults({ colorId: color.id === "" ? undefined : color.id })}
+							/>
+							<span className="sr-only">{locale === "ar" ? color.ar : color.en}</span>
+							<span
+								aria-hidden
+								className={`size-7 rounded-full ${color.hex === "" ? "border-2 border-dashed border-line-strong bg-paper" : "ring-1 ring-inset ring-black/15"}`}
+								style={color.hex === "" ? undefined : { backgroundColor: color.hex }}
+							/>
+						</label>
+					))}
+				</div>
+			</fieldset>
+
 			<div className="flex flex-wrap gap-4">
-				<label className="flex flex-col gap-1 text-sm">
-					{t("colourLabel")}
-					<select
-						value={config.defaults.colorId ?? ""}
-						onChange={(event) =>
-							updateDefaults({
-								colorId: event.target.value === "" ? undefined : event.target.value,
-							})
-						}
-						className="rounded-lg border border-line-strong px-2 py-1.5"
-					>
-						<option value="">{t("colourDefault")}</option>
-						{GOOGLE_COLORS.map((color) => (
-							<option key={color.id} value={color.id}>
-								{locale === "ar" ? color.ar : color.en}
-							</option>
-						))}
-					</select>
-				</label>
 				<label className="flex flex-col gap-1 text-sm">
 					{t("reminderLabel")}
 					<select

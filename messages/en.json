@@ -85,7 +85,12 @@
 		"emojiLabel": "Emoji",
 		"titleLabel": "Custom title",
 		"titlePlaceholder": "e.g. Dhuhr",
-		"transparencyLabel": "Busy or free for {prayer}"
+		"transparencyLabel": "Busy or free for {prayer}",
+		"hint": "Untick a prayer to leave it out of your calendar completely. Busy or Free only sets whether its event blocks your time.",
+		"colInclude": "Include",
+		"colPrayer": "Prayer",
+		"colShowAs": "Show as",
+		"customiseFor": "Customise {prayer}"
 	},
 	"timing": {
 		"heading": "Default for all prayers",
