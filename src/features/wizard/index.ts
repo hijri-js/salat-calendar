@@ -11,4 +11,5 @@ export {
 	useWizardConfig,
 	type WizardState,
 } from "./configStore";
+export { MAX_KEYWORD_LENGTH, MAX_KEYWORDS, MAX_LABEL_LENGTH } from "./savedSettings";
 export { WIZARD_STEPS, type WizardStep } from "./steps";

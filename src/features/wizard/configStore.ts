@@ -177,7 +177,7 @@ export const useWizardConfig = create<WizardState>()(
 			// Settings only; actions are code, and nothing else belongs on disk.
 			partialize: ({ config, titleLocaleChosen, methodChosen }) => ({ config, titleLocaleChosen, methodChosen }),
 			// Untrusted input: keep the defaults unless it passes the contract.
-			merge: (stored, current) => ({ ...current, ...(restoreSettings(stored) ?? {}) }),
+			merge: (stored, current) => ({ ...current, ...(restoreSettings(stored, defaultConfig) ?? {}) }),
 			skipHydration: true,
 		},
 	),

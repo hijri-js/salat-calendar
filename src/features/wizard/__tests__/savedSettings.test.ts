@@ -27,7 +27,7 @@ const dhuhrAsrOnly = {
 
 describe("restoreSettings", () => {
 	it("returns valid settings, keeping the two 'chosen' flags", () => {
-		const restored = restoreSettings({ config: dhuhrAsrOnly, titleLocaleChosen: true, methodChosen: true });
+		const restored = restoreSettings({ config: dhuhrAsrOnly, titleLocaleChosen: true, methodChosen: true }, defaultConfig);
 		expect(restored?.config.prayers.fajr.enabled).toBe(false);
 		expect(restored?.config.location.label).toBe("Makkah, Saudi Arabia");
 		expect(restored?.titleLocaleChosen).toBe(true);
@@ -35,18 +35,80 @@ describe("restoreSettings", () => {
 	});
 
 	it("treats anything but true as not chosen", () => {
-		const restored = restoreSettings({ config: defaultConfig, titleLocaleChosen: "yes" });
+		const restored = restoreSettings({ config: defaultConfig, titleLocaleChosen: "yes" }, defaultConfig);
 		expect(restored?.titleLocaleChosen).toBe(false);
 		expect(restored?.methodChosen).toBe(false);
 	});
 
-	it("rejects data that breaks the contract or is not an object", () => {
-		expect(restoreSettings(null)).toBeNull();
-		expect(restoreSettings("config")).toBeNull();
-		expect(restoreSettings({})).toBeNull();
-		expect(restoreSettings({ config: { ...defaultConfig, method: 999 } })).toBeNull();
-		expect(restoreSettings({ config: { ...defaultConfig, defaults: { ...defaultConfig.defaults, offsetMin: 9999 } } })).toBeNull();
-		expect(restoreSettings({ config: { ...defaultConfig, location: { latitude: 0, longitude: 0, timezone: "Mars/Olympus" } } })).toBeNull();
+	it("restores nothing when there is no saved config", () => {
+		expect(restoreSettings(null, defaultConfig)).toBeNull();
+		expect(restoreSettings("config", defaultConfig)).toBeNull();
+		expect(restoreSettings({}, defaultConfig)).toBeNull();
+	});
+
+	it("falls back only on the settings that fail, keeping the rest", () => {
+		const restored = restoreSettings(
+			{
+				config: {
+					...dhuhrAsrOnly,
+					method: 999,
+					defaults: { ...defaultConfig.defaults, offsetMin: 9999 },
+					// An empty window (start = end) is shown as a warning in the UI.
+					window: { startMin: 480, endMin: 480 },
+				},
+			},
+			defaultConfig,
+		);
+		expect(restored?.config.method).toBe(defaultConfig.method);
+		expect(restored?.config.defaults).toEqual(defaultConfig.defaults);
+		expect(restored?.config).not.toHaveProperty("window");
+		// Everything else survives.
+		expect(restored?.config.prayers.fajr.enabled).toBe(false);
+		expect(restored?.config.days).toEqual([0, 1, 2, 3, 4]);
+		expect(restored?.config.location.label).toBe("Makkah, Saudi Arabia");
+	});
+
+	it("drops a place with a timezone this browser does not know", () => {
+		const restored = restoreSettings(
+			{ config: { ...dhuhrAsrOnly, location: { latitude: 1, longitude: 2, timezone: "Mars/Olympus" } } },
+			defaultConfig,
+		);
+		expect(restored?.config.location).toEqual(defaultConfig.location);
+		expect(restored?.config.prayers.isha.enabled).toBe(false);
+	});
+
+	it("trims over-long keywords and labels instead of rejecting them", () => {
+		const keywords = [...Array.from({ length: 25 }, (_, i) => `k${i}`), "x".repeat(60), "k1"];
+		const restored = restoreSettings(
+			{
+				config: {
+					...dhuhrAsrOnly,
+					location: { ...dhuhrAsrOnly.location, label: "L".repeat(200) },
+					ooo: { enabled: true, keywords },
+				},
+			},
+			defaultConfig,
+		);
+		expect(restored?.config.ooo.keywords).toHaveLength(20);
+		expect(restored?.config.location.label).toHaveLength(120);
+		expect(restored?.config.location.timezone).toBe("Asia/Riyadh");
+	});
+
+	it("keeps a valid window and custom titles", () => {
+		const restored = restoreSettings(
+			{
+				config: {
+					...dhuhrAsrOnly,
+					window: { startMin: 1320, endMin: 360 },
+					prayers: { ...dhuhrAsrOnly.prayers, dhuhr: { enabled: true, emoji: "🕌", title: "صلاة الظهر" } },
+					jummah: { mode: "none" },
+				},
+			},
+			defaultConfig,
+		);
+		expect(restored?.config.window).toEqual({ startMin: 1320, endMin: 360 });
+		expect(restored?.config.prayers.dhuhr.title).toBe("صلاة الظهر");
+		expect(restored?.config.jummah.mode).toBe("none");
 	});
 });
 
