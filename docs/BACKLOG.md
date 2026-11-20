@@ -203,7 +203,8 @@ These six items come straight from the plan section 2 backlog row. None blocks v
 ### D2. Saved settings and share link
 - Story: as a returning user, my rules can be saved or shared without an account.
 - Acceptance criteria: the full SyncConfig can be encoded into a link that recreates the same wizard state; a share link leaks nothing private because it holds rules only, never tokens or calendar data.
-- Tasks: define the URL encoding on top of the shared Zod schema; decide with the owner whether persistence needs storage beyond the URL.
+- Tasks: define the URL encoding on top of the shared Zod schema.
+- Done so far (after PR 6): settings are saved in this browser's `localStorage` (`src/features/wizard/savedSettings.ts`), validated on load, with a "Reset to defaults" button. The share link is still open.
 
 ### D3. Meeting gap-finding
 - Story: as an office professional, my prayer events land in real gaps between meetings, not on top of them.

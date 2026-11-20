@@ -18,6 +18,7 @@ import type { TitleLocale } from "@/lib/prayer-engine/types";
 import GetIt from "./getIt";
 import LanguageSwitcher from "./languageSwitcher";
 import { selectPlaceSet, useWizardConfig } from "./configStore";
+import { SETTINGS_KEY } from "./savedSettings";
 import Stepper from "./stepper";
 import type { WizardStep } from "./steps";
 
@@ -45,6 +46,24 @@ export default function Wizard() {
 	const [active, setActive] = useState<WizardStep>("place");
 	const placeSet = useWizardConfig(selectPlaceSet);
 	const adoptUiLocale = useWizardConfig((s) => s.adoptUiLocale);
+
+	const reset = useWizardConfig((s) => s.reset);
+
+	// Load saved settings after mount (the server cannot read localStorage),
+	// then let titles follow the UI language unless the user chose one.
+	// Effects run in order, so the saved choice is in place first.
+	// Another tab saving settings is picked up here, so the last tab to write
+	// does not silently undo what the user did in this one.
+	useEffect(() => {
+		void useWizardConfig.persist.rehydrate();
+		const onStorage = (event: StorageEvent) => {
+			if (event.key === SETTINGS_KEY) {
+				void useWizardConfig.persist.rehydrate();
+			}
+		};
+		window.addEventListener("storage", onStorage);
+		return () => window.removeEventListener("storage", onStorage);
+	}, []);
 
 	// Event titles follow the UI language by default (Arabic UI → Arabic titles).
 	useEffect(() => {
@@ -78,6 +97,21 @@ export default function Wizard() {
 					{t("app.tagline")}
 				</h1>
 				<Stepper active={active} onSelect={setActive} problems={problems} />
+				<p className="flex flex-wrap items-center gap-x-2 text-xs text-muted">
+					{t("settings.saved")}
+					<button
+						type="button"
+						onClick={() => {
+							reset();
+							// Reset clears the title-language choice; follow the UI again.
+							adoptUiLocale(locale);
+							setActive("place");
+						}}
+						className="touch-target min-h-8 font-medium text-ink underline underline-offset-4"
+					>
+						{t("settings.reset")}
+					</button>
+				</p>
 			</div>
 
 			<div className="flex flex-1 flex-col gap-8 lg:flex-row lg:items-start">

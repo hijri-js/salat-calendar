@@ -32,7 +32,7 @@ The code lives in the git repo `hijri-js/salat-calendar`. `instructions.md` and 
 | Second output    | Download a static `.ics` file for the same rules, no login (see 4.10)                                                                                  |
 | Layout           | Wizard, free navigation, working defaults (see 6)                                                                                                      |
 | Extras in v1     | Custom emoji + title per prayer; event reminder + colour                                                                                               |
-| Backlog (not v1) | Dark mode; saved settings + share link; meeting gap-finding; auto monthly re-sync; global KV cache; hosted `.ics` subscribe URL                        |
+| Backlog (not v1) | Dark mode; share link (settings are already saved in the browser); meeting gap-finding; auto monthly re-sync; global KV cache; hosted `.ics` subscribe URL                        |
 | Deploy           | Cloudflare Workers via `@opennextjs/cloudflare`                                                                                                        |
 | Repo and flow    | `hijri-js/salat-calendar`; feature folders; one feature branch and one PR per slice; CI runs on every PR                                               |
 | License          | Apache-2.0                                                                                                                                             |
@@ -83,7 +83,7 @@ In code: the event tag is `app=salat-calendar`, event IDs start with `sc`, and t
 | Framework      | Next.js (latest, App Router), TypeScript strict, pnpm only                             |
 | UI             | Tailwind CSS v4, native HTML elements (`dialog`, `details`, `popover`), Lucide icons, logical properties (`ms-`, `pe-`...); see [ADR 0001](adr/0001-native-ui-over-shadcn.md) |
 | i18n           | `next-intl`, routes `/en` and `/ar`, `dir="rtl"` for Arabic, numerals stay Latin       |
-| Client state   | Zustand (wizard config, in memory)                                                     |
+| Client state   | Zustand (wizard config, saved to this browser's localStorage)                          |
 | Server state   | TanStack Query (preview query; one mutation per month chunk)                           |
 | Validation     | Zod schemas shared by client and API routes                                            |
 | Google sign-in | Google Identity Services token popup (native OAuth, no Auth.js, no client secret)      |
@@ -395,7 +395,7 @@ flowchart LR
 
 | What needs remembering | Where it already lives                            |
 | ---------------------- | ------------------------------------------------- |
-| The user's rules       | Browser memory during the visit                   |
+| The user's rules       | This browser's localStorage (rules only, checked on load) |
 | Which events are ours  | The tag on each Google event                      |
 | Which calendar is ours | Google (found by name/ownership; Step 0 confirms) |
 | Prayer times           | Cache, rebuildable from AlAdhan                   |

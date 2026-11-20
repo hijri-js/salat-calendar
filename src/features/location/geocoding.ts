@@ -6,6 +6,8 @@
  * The response parser is pure and exported for tests; a recorded fixture of
  * the real API lives in `__tests__/fixtures/`.
  */
+import { MAX_LABEL_LENGTH } from "@/features/wizard";
+
 
 /** One city suggestion, already shaped for the wizard config store. */
 export interface CityResult {
@@ -61,7 +63,8 @@ export function composeLabel(
 	if (country !== undefined && country !== "" && country !== name && country !== admin1) {
 		parts.push(country);
 	}
-	return parts.join(", ");
+	// The saved-settings contract caps labels; a longer one is cut, not rejected.
+	return parts.join(", ").slice(0, MAX_LABEL_LENGTH);
 }
 
 /**

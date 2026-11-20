@@ -13,7 +13,7 @@ This repo is **salat-calendar** (the folder was originally named `salaat-sync`).
 - **Use `@/` imports** for anything outside the current folder (e.g. `@/lib/prayer-engine/types`); plain relative `./` imports only within the same folder. The alias is configured in `tsconfig.json` and mirrored in `vitest.config.ts` — keep the two in sync if either changes.
 - **TypeScript strict**; Next.js App Router; Tailwind CSS v4 + native HTML elements + Lucide icons (see docs/adr/0001).
 - **i18n:** `next-intl`, routes `/en` and `/ar`, `dir="rtl"` for Arabic, numerals stay Latin, logical CSS properties (`ms-`, `pe-`).
-- **No database.** User rules live in browser memory; event ownership lives on the Google event tags.
+- **No database.** User rules live in this browser's `localStorage` (settings only, validated against the Zod contract on load; never a token); event ownership lives on the Google event tags.
 - **Google access token never stored** — not in cookies, localStorage, server, or logs. No refresh token. Token travels in the `Authorization` header per request and is forgotten.
 - **Server never trusts client times.** Prayer times come from AlAdhan (cached) or the local `adhan` fallback, always server-side or via the shared engine.
 - The sync API touches only events tagged `extendedProperties.private.app = "salat-calendar"`.

@@ -1,5 +1,9 @@
 /**
- * Wizard configuration state (plan §2: browser memory, no database).
+ * Wizard configuration state (plan §2: in the browser, no database).
+ *
+ * Saved to this browser's localStorage (`savedSettings.ts`) so a reload keeps
+ * the user's rules. Hydration is skipped at creation and run by the wizard
+ * after mount, so server and first client render agree (no mismatch).
  *
  * Holds the full `SyncConfig` contract from the prayer engine, seeded with
  * the working defaults from plan §2/§6 so a visitor can pick a city and go
@@ -7,6 +11,7 @@
  * validity questions the stepper and final buttons need.
  */
 import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 import {
 	PRAYERS,
@@ -24,6 +29,8 @@ import {
 	type TitleLocale,
 	type Weekday,
 } from "@/lib/prayer-engine/types";
+
+import { restoreSettings, safeLocalStorage, SETTINGS_KEY, SETTINGS_VERSION } from "./savedSettings";
 
 /** Working defaults for every wizard setting (plan §2 and §6 wireframes). */
 export const defaultConfig: SyncConfig = {
@@ -86,81 +93,95 @@ export interface WizardState {
 	reset: () => void;
 }
 
-export const useWizardConfig = create<WizardState>()((set) => ({
-	config: defaultConfig,
-	titleLocaleChosen: false,
-	methodChosen: false,
-	setLocation: (location) =>
-		set(({ config }) => ({
-			config: { ...config, location: { ...config.location, ...location } },
-		})),
-	setMethod: (method) => set(({ config }) => ({ config: { ...config, method }, methodChosen: true })),
-	suggestMethod: (method) =>
-		set((state) =>
-			state.methodChosen || state.config.method === method
-				? state
-				: { config: { ...state.config, method } },
-		),
-	setSchool: (school) => set(({ config }) => ({ config: { ...config, school } })),
-	updatePrayer: (prayer, patch) =>
-		set(({ config }) => ({
-			config: {
-				...config,
-				prayers: {
-					...config.prayers,
-					[prayer]: { ...config.prayers[prayer], ...patch },
-				},
-			},
-		})),
-	setDays: (days) => set(({ config }) => ({ config: { ...config, days } })),
-	toggleDay: (day) =>
-		set(({ config }) => ({
-			config: {
-				...config,
-				days: config.days.includes(day)
-					? config.days.filter((d) => d !== day)
-					: [...config.days, day].sort((a, b) => a - b),
-			},
-		})),
-	updateDefaults: (patch) =>
-		set(({ config }) => ({
-			config: { ...config, defaults: { ...config.defaults, ...patch } },
-		})),
-	updateRounding: (patch) =>
-		set(({ config }) => ({
-			config: { ...config, rounding: { ...config.rounding, ...patch } },
-		})),
-	setWindow: (window) =>
-		set(({ config }) => {
-			if (window === null) {
-				// Drop the key entirely, mirroring the optional contract.
-				const rest = { ...config };
-				delete rest.window;
-				return { config: rest };
-			}
-			return { config: { ...config, window } };
+export const useWizardConfig = create<WizardState>()(
+	persist(
+		(set) => ({
+			config: defaultConfig,
+			titleLocaleChosen: false,
+			methodChosen: false,
+			setLocation: (location) =>
+				set(({ config }) => ({
+					config: { ...config, location: { ...config.location, ...location } },
+				})),
+			setMethod: (method) => set(({ config }) => ({ config: { ...config, method }, methodChosen: true })),
+			suggestMethod: (method) =>
+				set((state) =>
+					state.methodChosen || state.config.method === method
+						? state
+						: { config: { ...state.config, method } },
+				),
+			setSchool: (school) => set(({ config }) => ({ config: { ...config, school } })),
+			updatePrayer: (prayer, patch) =>
+				set(({ config }) => ({
+					config: {
+						...config,
+						prayers: {
+							...config.prayers,
+							[prayer]: { ...config.prayers[prayer], ...patch },
+						},
+					},
+				})),
+			setDays: (days) => set(({ config }) => ({ config: { ...config, days } })),
+			toggleDay: (day) =>
+				set(({ config }) => ({
+					config: {
+						...config,
+						days: config.days.includes(day)
+							? config.days.filter((d) => d !== day)
+							: [...config.days, day].sort((a, b) => a - b),
+					},
+				})),
+			updateDefaults: (patch) =>
+				set(({ config }) => ({
+					config: { ...config, defaults: { ...config.defaults, ...patch } },
+				})),
+			updateRounding: (patch) =>
+				set(({ config }) => ({
+					config: { ...config, rounding: { ...config.rounding, ...patch } },
+				})),
+			setWindow: (window) =>
+				set(({ config }) => {
+					if (window === null) {
+						// Drop the key entirely, mirroring the optional contract.
+						const rest = { ...config };
+						delete rest.window;
+						return { config: rest };
+					}
+					return { config: { ...config, window } };
+				}),
+			updateJummah: (patch) =>
+				set(({ config }) => ({
+					config: { ...config, jummah: { ...config.jummah, ...patch } },
+				})),
+			updateOoo: (patch) =>
+				set(({ config }) => ({
+					config: { ...config, ooo: { ...config.ooo, ...patch } },
+				})),
+			setTitleLocale: (titleLocale) =>
+				set(({ config }) => ({ config: { ...config, titleLocale }, titleLocaleChosen: true })),
+			adoptUiLocale: (locale) =>
+				set((state) =>
+					state.titleLocaleChosen || state.config.titleLocale === locale
+						? state
+						: { config: { ...state.config, titleLocale: locale } },
+				),
+			setTarget: (target) => set(({ config }) => ({ config: { ...config, target } })),
+			setReplaceExisting: (replaceExisting) =>
+				set(({ config }) => ({ config: { ...config, replaceExisting } })),
+			reset: () => set({ config: defaultConfig, titleLocaleChosen: false, methodChosen: false }),
 		}),
-	updateJummah: (patch) =>
-		set(({ config }) => ({
-			config: { ...config, jummah: { ...config.jummah, ...patch } },
-		})),
-	updateOoo: (patch) =>
-		set(({ config }) => ({
-			config: { ...config, ooo: { ...config.ooo, ...patch } },
-		})),
-	setTitleLocale: (titleLocale) =>
-		set(({ config }) => ({ config: { ...config, titleLocale }, titleLocaleChosen: true })),
-	adoptUiLocale: (locale) =>
-		set((state) =>
-			state.titleLocaleChosen || state.config.titleLocale === locale
-				? state
-				: { config: { ...state.config, titleLocale: locale } },
-		),
-	setTarget: (target) => set(({ config }) => ({ config: { ...config, target } })),
-	setReplaceExisting: (replaceExisting) =>
-		set(({ config }) => ({ config: { ...config, replaceExisting } })),
-	reset: () => set({ config: defaultConfig, titleLocaleChosen: false, methodChosen: false }),
-}));
+		{
+			name: SETTINGS_KEY,
+			version: SETTINGS_VERSION,
+			storage: createJSONStorage(() => safeLocalStorage),
+			// Settings only; actions are code, and nothing else belongs on disk.
+			partialize: ({ config, titleLocaleChosen, methodChosen }) => ({ config, titleLocaleChosen, methodChosen }),
+			// Untrusted input: keep the defaults unless it passes the contract.
+			merge: (stored, current) => ({ ...current, ...(restoreSettings(stored, defaultConfig) ?? {}) }),
+			skipHydration: true,
+		},
+	),
+);
 
 /**
  * "Place set?" — the only required input (plan §6). A place is present when

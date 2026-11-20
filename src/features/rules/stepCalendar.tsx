@@ -10,7 +10,7 @@ import { useState, type FormEvent } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { X } from "lucide-react";
 
-import { useWizardConfig } from "@/features/wizard";
+import { MAX_KEYWORD_LENGTH, MAX_KEYWORDS, useWizardConfig } from "@/features/wizard";
 
 import { GOOGLE_COLORS } from "./colors";
 import NavButtons from "./navButtons";
@@ -38,7 +38,8 @@ export default function StepCalendar({ onBack, onNext }: StepCalendarProps) {
 	const addKeyword = (event: FormEvent) => {
 		event.preventDefault();
 		const value = keyword.trim();
-		if (value === "") {
+		// Same limits as the saved-settings contract; a repeat adds nothing.
+		if (value === "" || config.ooo.keywords.length >= MAX_KEYWORDS || config.ooo.keywords.includes(value)) {
 			return;
 		}
 		updateOoo({ keywords: [...config.ooo.keywords, value] });
@@ -175,6 +176,7 @@ export default function StepCalendar({ onBack, onNext }: StepCalendarProps) {
 					type="text"
 					value={keyword}
 					onChange={(event) => setKeyword(event.target.value)}
+					maxLength={MAX_KEYWORD_LENGTH}
 					placeholder={t("keywordPlaceholder")}
 					className="min-w-0 max-w-64 flex-1 rounded-lg border border-line-strong px-2 py-1.5 text-sm"
 				/>
