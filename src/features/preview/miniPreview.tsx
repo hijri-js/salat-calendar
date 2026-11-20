@@ -3,8 +3,10 @@
 /**
  * MiniPreview (plan §6 wireframe, side panel): today's five prayers for the
  * chosen place, run through the same engine as the week preview, so every
- * rule change shows up here at once. Each row shows the event time, or why
- * the prayer is off or skipped today.
+ * rule change shows up here at once. Each row shows the adhan time, and
+ * under it when the event starts (offset, rounding, Jummah applied) or why
+ * the prayer is off or skipped today. Showing only the event time read as
+ * "wrong prayer times" (it is the adhan plus the offset).
  */
 import { useTranslations } from "next-intl";
 
@@ -46,6 +48,7 @@ function MiniPreviewToday({ today }: { today: string }) {
 
 	const preview = usePreview(config, today, today);
 	const plan = preview.days.find((day) => day.date === today);
+	const adhan = preview.timings.find((day) => day.date === today)?.times;
 	const eventCount = plan?.events.length ?? 0;
 
 	return (
@@ -69,6 +72,7 @@ function MiniPreviewToday({ today }: { today: string }) {
 				<p className="text-sm text-muted">{t("loading")}</p>
 			) : (
 				<>
+					<p className="text-xs text-muted">{t("caption")}</p>
 					<ul className="flex flex-col divide-y divide-line text-sm">
 						{PRAYERS.map((prayer) => {
 							const event = plan.events.find((e) => e.prayer === prayer);
@@ -82,18 +86,32 @@ function MiniPreviewToday({ today }: { today: string }) {
 									<span className={event ? "font-medium" : "text-muted"}>
 										{tPrayers(`prayer.${prayer}`)}
 									</span>
-									<span className="ms-auto tabular-nums">
-										{event ? (
-											<bdi dir="ltr">{event.startLocal.slice(11, 16)}</bdi>
-										) : (
-											<span className="text-xs text-muted">
-												{off
-													? t("off")
-													: skipped
-														? tPreview(`skipReason.${skipped.reason}`)
-														: t("skipped")}
+									<span className="ms-auto flex flex-col items-end tabular-nums">
+										{adhan?.[prayer] ? (
+											<span className={event ? "font-medium" : "text-muted"}>
+												<span className="sr-only">{t("adhan")} </span>
+												<bdi dir="ltr">{adhan[prayer]}</bdi>
 											</span>
-										)}
+										) : null}
+										<span className="text-xs text-muted">
+											{event ? (
+												<>
+													{t("eventAt")} <bdi dir="ltr">{event.startLocal.slice(11, 16)}</bdi>
+													{/* An offset can push the event past midnight either way. */}
+													{event.startLocal.slice(0, 10) > today
+														? ` ${t("nextDay")}`
+														: event.startLocal.slice(0, 10) < today
+															? ` ${t("previousDay")}`
+															: null}
+												</>
+											) : off ? (
+												t("off")
+											) : skipped ? (
+												tPreview(`skipReason.${skipped.reason}`)
+											) : (
+												t("skipped")
+											)}
+										</span>
 									</span>
 								</li>
 							);

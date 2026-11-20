@@ -169,7 +169,12 @@
 		"noCity": "Pick a city to see today’s times.",
 		"loading": "Loading today…",
 		"off": "off",
-		"skipped": "skipped"
+		"skipped": "skipped",
+		"caption": "Adhan time, and when your event starts.",
+		"eventAt": "event",
+		"adhan": "Adhan",
+		"nextDay": "(next day)",
+		"previousDay": "(day before)"
 	},
 	"getIt": {
 		"heading": "Get it",
