@@ -20,7 +20,7 @@ Key facts, all from the plan:
 - One year of prayer events in one run. Sync writes month by month, with a progress bar and a per-month retry.
 - Every event is tagged `app=salat-calendar`. Cleanup touches only tagged events.
 - The Google access token lives in browser memory for the tab only. It is never stored anywhere.
-- No database. User rules live in browser memory. Event ownership lives on the events.
+- No database. User rules are saved in the user's own browser (`localStorage`), never on a server. Event ownership lives on the events.
 - Two locales: `/en` and `/ar`, with right-to-left layout for Arabic.
 - Open source, Apache-2.0, repo `hijri-js/salat-calendar`. Deploys to Cloudflare Workers.
 
@@ -117,7 +117,7 @@ The plan (section 2) already anticipated the name conflict with SalahSync and ch
 
 These are decisions from plan sections 2, 4, and 5. They are not missing features; they are deliberate rejections.
 
-- No accounts and no database. Rules live in browser memory. Ownership lives on the event tags. A database is only needed for accounts or automatic monthly re-sync, and both are backlog items (see docs/BACKLOG.md).
+- No accounts and no database. Rules are saved in the user's own browser. Ownership lives on the event tags. A database is only needed for accounts or automatic monthly re-sync, and both are backlog items (see docs/BACKLOG.md).
 - No token storage of any kind: no cookies, no localStorage, no server storage, no logs, no refresh token. If this makes the product less convenient, it stays that way.
 - No server-side trust of client times. The server reads prayer data and writes Google events; it does not act on times sent by the client.
 - No Nominatim geocoding. Its policy bans autocomplete and allows 1 request/second for the whole app. Open-Meteo is used instead.

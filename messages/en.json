@@ -223,5 +223,9 @@
 		"importGoogleRemove": "To remove everything later, delete the {name} calendar.",
 		"importApple": "Apple Calendar: open the file and choose New Calendar.",
 		"importOutlook": "Outlook: Add calendar → Upload from file, then pick a calendar."
+	},
+	"settings": {
+		"saved": "Your settings are saved in this browser only.",
+		"reset": "Reset to defaults"
 	}
 }

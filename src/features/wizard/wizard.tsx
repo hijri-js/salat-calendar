@@ -46,6 +46,15 @@ export default function Wizard() {
 	const placeSet = useWizardConfig(selectPlaceSet);
 	const adoptUiLocale = useWizardConfig((s) => s.adoptUiLocale);
 
+	const reset = useWizardConfig((s) => s.reset);
+
+	// Load saved settings after mount (the server cannot read localStorage),
+	// then let titles follow the UI language unless the user chose one.
+	// Effects run in order, so the saved choice is in place first.
+	useEffect(() => {
+		void useWizardConfig.persist.rehydrate();
+	}, []);
+
 	// Event titles follow the UI language by default (Arabic UI → Arabic titles).
 	useEffect(() => {
 		adoptUiLocale(locale);
@@ -78,6 +87,19 @@ export default function Wizard() {
 					{t("app.tagline")}
 				</h1>
 				<Stepper active={active} onSelect={setActive} problems={problems} />
+				<p className="flex flex-wrap items-center gap-x-2 text-xs text-muted">
+					{t("settings.saved")}
+					<button
+						type="button"
+						onClick={() => {
+							reset();
+							setActive("place");
+						}}
+						className="touch-target min-h-8 font-medium text-ink underline underline-offset-4"
+					>
+						{t("settings.reset")}
+					</button>
+				</p>
 			</div>
 
 			<div className="flex flex-1 flex-col gap-8 lg:flex-row lg:items-start">

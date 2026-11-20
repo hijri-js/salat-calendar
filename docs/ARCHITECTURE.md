@@ -320,14 +320,14 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    A[User rules] -->|live in| B[Browser memory<br/>during the visit]
+    A[User rules] -->|live in| B[This browser's localStorage<br/>rules only, checked on load]
     C[Which events are ours] -->|tag on| D[Each Google event<br/>app=salat-calendar]
     E[Which calendar is ours] -->|found by| F[Google name and ownership]
 ```
 
 | What needs remembering | Where it already lives                            |
 | ---------------------- | ------------------------------------------------- |
-| The user's rules       | Browser memory during the visit                   |
+| The user's rules       | This browser's localStorage (rules only, checked on load) |
 | Which events are ours  | The tag on each Google event                      |
 | Which calendar is ours | Google (found by name and ownership)              |
 | Prayer times           | Cache, rebuildable from AlAdhan                   |
