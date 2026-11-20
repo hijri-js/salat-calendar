@@ -13,7 +13,7 @@ import { Download, LoaderCircle } from "lucide-react";
 
 import type { SyncConfig } from "@/lib/prayer-engine/types";
 
-import { calendarNameFor } from "./icsFile";
+import { calendarNameFor, progressFraction } from "./icsFile";
 import { useIcsDownload } from "./useIcsDownload";
 
 interface DownloadCardProps {
@@ -68,12 +68,28 @@ export default function DownloadCard({ config, placeSet, problemId }: DownloadCa
 					)}
 					{working ? t("preparing") : state.status === "done" ? t("downloadAgain") : t("download")}
 				</button>
-				{/* Month-by-month progress is shown but not announced: thirteen
-				    polite updates would be noise. The button label says "Preparing…". */}
+				{/* Progress is visible, not announced: thirteen polite updates would be
+				    noise, and the button label already says "Preparing…". The native
+				    <progress> still exposes its value to screen readers on demand. */}
 				{state.status === "working" ? (
-					<p aria-hidden className="text-xs text-muted">
-						{t("progress", { done: String(state.done), total: String(state.total) })}
-					</p>
+					<div className="flex w-full flex-col gap-1">
+						<div className="flex items-center gap-3">
+							<progress
+								className="ics-progress"
+								value={state.doneDays}
+								max={state.totalDays}
+								aria-label={t("progressLabel")}
+							/>
+							<span aria-hidden className="text-sm font-medium tabular-nums text-ink">
+								{new Intl.NumberFormat(`${locale}-u-nu-latn`, { style: "percent" }).format(
+									progressFraction(state.doneDays, state.totalDays),
+								)}
+							</span>
+						</div>
+						<p aria-hidden className="text-xs text-muted">
+							{t("progress", { done: String(state.done), total: String(state.total) })}
+						</p>
+					</div>
 				) : null}
 				<div id={STATUS_ID} role="status" className="flex flex-col gap-1 text-xs text-muted">
 					{state.status === "done" ? (

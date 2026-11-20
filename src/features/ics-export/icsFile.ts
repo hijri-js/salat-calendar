@@ -60,6 +60,16 @@ export function monthChunks(from: string, to: string): Array<{ from: string; to:
 	return chunks;
 }
 
+/** Days in an inclusive chunk, for day-based progress. */
+export function chunkDays(chunk: { from: string; to: string }): number {
+	return Math.round((toUtcDate(chunk.to).getTime() - toUtcDate(chunk.from).getTime()) / 86_400_000) + 1;
+}
+
+/** Share of the work done, 0..1, for the progress bar. */
+export function progressFraction(doneDays: number, totalDays: number): number {
+	return totalDays > 0 ? Math.min(1, Math.max(0, doneDays / totalDays)) : 0;
+}
+
 /**
  * "salat-london-2026.ics" from a label like "London, England, United
  * Kingdom". Only the first comma part is used, reduced to ASCII letters and

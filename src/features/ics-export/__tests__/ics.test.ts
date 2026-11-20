@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { PlannedEvent } from "@/lib/prayer-engine/types";
 
-import { buildIcs, escapeText, foldLine, toUtc } from "@/features/ics-export/ics";
+import { buildIcs, escapeText, foldLine, sequenceFor, toUtc } from "@/features/ics-export/ics";
 
 /** Octet (UTF-8 byte) length of a string, for fold assertions. */
 function octets(line: string): number {
@@ -179,6 +179,20 @@ describe("buildIcs", () => {
 		);
 	});
 
+	it("publishes the file and stamps a SEQUENCE that grows with each download", () => {
+		const first = buildIcs([londonEvent()], { now });
+		expect(first).toContain("CALSCALE:GREGORIAN\r\nMETHOD:PUBLISH\r\n");
+		expect(first).toContain("SEQUENCE:0\r\n");
+		// One day later: 1,440 minutes later, so a re-import outranks the old file.
+		const later = buildIcs([londonEvent()], { now: new Date("2026-01-02T00:00:00Z") });
+		expect(later).toContain("SEQUENCE:1440\r\n");
+	});
+
+	it("keeps SEQUENCE at 0 or more for clocks before 2026", () => {
+		expect(sequenceFor(new Date("2025-06-01T00:00:00Z"))).toBe(0);
+		expect(sequenceFor(new Date("2126-01-01T00:00:00Z"))).toBeLessThan(2 ** 31);
+	});
+
 	it("writes X-WR-CALNAME only when a calendarName is given", () => {
 		expect(buildIcs([londonEvent()], { now, calendarName: "Salat" })).toContain(
 			"X-WR-CALNAME:Salat\r\n",
@@ -213,10 +227,12 @@ describe("buildIcs", () => {
 			"VERSION:2.0",
 			"PRODID:-//salat-calendar//EN",
 			"CALSCALE:GREGORIAN",
+			"METHOD:PUBLISH",
 			"X-WR-CALNAME:Salat",
 			"BEGIN:VEVENT",
 			"UID:sc20260615p5@salat-calendar",
 			"DTSTAMP:20260101T000000Z",
+			"SEQUENCE:0",
 			"DTSTART:20260615T203000Z",
 			"DTEND:20260615T211500Z",
 			"SUMMARY:Isha — Salat",

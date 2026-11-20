@@ -14,11 +14,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { buildPreviewBody, fetchPreview } from "@/features/preview";
 import type { DayTimings, SyncConfig } from "@/lib/prayer-engine/types";
 
-import { buildYearIcs, icsFileName, monthChunks, todayIn, yearRange } from "./icsFile";
+import { buildYearIcs, chunkDays, icsFileName, monthChunks, todayIn, yearRange } from "./icsFile";
 
 export type IcsDownloadState =
 	| { status: "idle" }
-	| { status: "working"; done: number; total: number }
+	| { status: "working"; done: number; total: number; doneDays: number; totalDays: number }
 	| { status: "done"; eventCount: number; fileName: string; usedLocal: boolean; from: string; to: string }
 	| { status: "empty" }
 	| { status: "error" };
@@ -61,7 +61,10 @@ export function useIcsDownload(config: SyncConfig, calendarName: string) {
 		try {
 			const { from, to } = yearRange(todayIn(timeZone));
 			const chunks = monthChunks(from, to);
-			setState({ status: "working", done: 0, total: chunks.length });
+			// Progress counts days, so the bar moves smoothly instead of in 13 jumps.
+			const totalDays = chunks.reduce((sum, chunk) => sum + chunkDays(chunk), 0);
+			let doneDays = 0;
+			setState({ status: "working", done: 0, total: chunks.length, doneDays, totalDays });
 
 			const timings: DayTimings[] = [];
 			for (const [index, chunk] of chunks.entries()) {
@@ -70,7 +73,8 @@ export function useIcsDownload(config: SyncConfig, calendarName: string) {
 					throw new Error("Download request is not valid");
 				}
 				timings.push(...(await fetchPreview(body, abort.signal)));
-				setState({ status: "working", done: index + 1, total: chunks.length });
+				doneDays += chunkDays(chunk);
+				setState({ status: "working", done: index + 1, total: chunks.length, doneDays, totalDays });
 			}
 			// The user may have left the step while the last month arrived.
 			if (abort.signal.aborted) {

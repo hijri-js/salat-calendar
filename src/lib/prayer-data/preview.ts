@@ -39,9 +39,32 @@ export interface PreviewDeps {
 /** After AlAdhan answers 429, skip it for this long and compute locally. */
 export const RATE_LIMIT_PAUSE_MS = 60_000;
 
-// Per-isolate circuit breaker: one 429 pauses every request on this isolate,
-// so a burst of traffic cannot keep hammering AlAdhan (plan §5: ~12 req/s).
+/**
+ * After AlAdhan times out, cannot be reached or answers 5xx, skip it for
+ * this long. Without it every month of a year download waited the full
+ * 10 s timeout again (about 2 minutes); now only the first month does.
+ */
+export const OUTAGE_PAUSE_MS = 30_000;
+
+// Per-isolate circuit breaker: one 429 or outage pauses every request on this
+// isolate, so a burst of traffic cannot keep hammering AlAdhan (plan §5:
+// ~12 req/s) and a down AlAdhan does not stall each request.
 let aladhanPausedUntil = 0;
+
+/** How long a failed AlAdhan call pauses further calls; 0 for no pause. */
+function pauseFor(error: unknown): number {
+	if (!(error instanceof ApiError)) {
+		return 0;
+	}
+	if (error.code === "RATE_LIMIT") {
+		return RATE_LIMIT_PAUSE_MS;
+	}
+	if (error.code === "NETWORK" || (error.code === "SERVER" && (error.status ?? 0) >= 500)) {
+		return OUTAGE_PAUSE_MS;
+	}
+	// A bad request or an odd response shape says nothing about AlAdhan's health.
+	return 0;
+}
 
 /** Test helper: clear the rate-limit pause between tests. */
 export function resetRateLimitPauseForTest(): void {
@@ -106,9 +129,12 @@ export async function getTimingsForRange(
 			days.push(...cached);
 			continue;
 		}
+		// Read once: the catch must know whether this was the synthetic
+		// "paused" error, even if the pause ends while it is being handled.
+		const paused = now() < aladhanPausedUntil;
 		try {
-			if (now() < aladhanPausedUntil) {
-				throw new ApiError("RATE_LIMIT", "AlAdhan paused after a recent 429", 429);
+			if (paused) {
+				throw new ApiError("RATE_LIMIT", "AlAdhan paused after a recent failure", 429);
 			}
 			const raw = await (deps.fetchMonth ?? fetchMonthRaw)({
 				latitude,
@@ -130,8 +156,11 @@ export async function getTimingsForRange(
 		} catch (error) {
 			// Network, rate limit, server or shape errors all fall back locally;
 			// fallback results are never cached (plan §4.9).
-			if (error instanceof ApiError && error.code === "RATE_LIMIT" && now() >= aladhanPausedUntil) {
-				aladhanPausedUntil = now() + RATE_LIMIT_PAUSE_MS;
+			// Only a real upstream failure starts a pause; the synthetic error
+			// thrown while paused must not extend it.
+			const pause = paused ? 0 : pauseFor(error);
+			if (pause > 0) {
+				aladhanPausedUntil = now() + pause;
 			}
 			const local = await (deps.computeLocal ?? computeLocalMonthTimings)({
 				latitude,
