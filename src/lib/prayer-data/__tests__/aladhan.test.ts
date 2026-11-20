@@ -68,6 +68,24 @@ describe("fetchMonthRaw", () => {
 		}
 	});
 
+	it("throws NETWORK when the request times out", async () => {
+		vi.stubGlobal("fetch", vi.fn(async () => {
+			throw new DOMException("The operation timed out.", "TimeoutError");
+		}));
+		await expect(fetchMonthRaw(base)).rejects.toMatchObject({ code: "NETWORK" });
+	});
+
+	it("throws NETWORK when the body stalls until the timeout", async () => {
+		const controller = new AbortController();
+		const stalled = new Response("{}", { status: 200 });
+		vi.spyOn(stalled, "json").mockImplementation(async () => {
+			controller.abort(new DOMException("The operation timed out.", "TimeoutError"));
+			throw new DOMException("The operation timed out.", "TimeoutError");
+		});
+		vi.stubGlobal("fetch", vi.fn(async () => stalled));
+		await expect(fetchMonthRaw({ ...base, signal: controller.signal })).rejects.toMatchObject({ code: "NETWORK" });
+	});
+
 	it("passes an abort signal through to fetch", async () => {
 		const controller = new AbortController();
 		const fetchMock = vi.fn(async (_url: string, init?: RequestInit) => {

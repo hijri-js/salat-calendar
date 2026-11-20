@@ -60,7 +60,11 @@ export async function fetchMonthRaw(params: MonthParams): Promise<unknown> {
 	let body: unknown;
 	try {
 		body = await response.json();
-	} catch {
+	} catch (cause) {
+		// A body that stalls until the timeout is an outage, not a bad shape.
+		if (params.signal?.aborted || (cause instanceof DOMException && cause.name === "TimeoutError")) {
+			throw new ApiError("NETWORK", `AlAdhan body timed out: ${String(cause)}`);
+		}
 		throw new ApiError("UNEXPECTED", "AlAdhan returned a non-JSON body");
 	}
 	return body;

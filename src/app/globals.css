@@ -221,7 +221,15 @@
 .ics-progress::-webkit-progress-value {
   background: var(--accent);
   border-radius: 999px;
-  transition: inline-size 300ms cubic-bezier(0.25, 1, 0.5, 1);
+  transition: width 300ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* The global reduced-motion rule matches `*`, which does not reach this
+   pseudo-element, so cancel its transition here. */
+@media (prefers-reduced-motion: reduce) {
+  .ics-progress::-webkit-progress-value {
+    transition: none;
+  }
 }
 
 .ics-progress::-moz-progress-bar {

@@ -129,8 +129,11 @@ export async function getTimingsForRange(
 			days.push(...cached);
 			continue;
 		}
+		// Read once: the catch must know whether this was the synthetic
+		// "paused" error, even if the pause ends while it is being handled.
+		const paused = now() < aladhanPausedUntil;
 		try {
-			if (now() < aladhanPausedUntil) {
+			if (paused) {
 				throw new ApiError("RATE_LIMIT", "AlAdhan paused after a recent failure", 429);
 			}
 			const raw = await (deps.fetchMonth ?? fetchMonthRaw)({
@@ -155,7 +158,7 @@ export async function getTimingsForRange(
 			// fallback results are never cached (plan §4.9).
 			// Only a real upstream failure starts a pause; the synthetic error
 			// thrown while paused must not extend it.
-			const pause = now() >= aladhanPausedUntil ? pauseFor(error) : 0;
+			const pause = paused ? 0 : pauseFor(error);
 			if (pause > 0) {
 				aladhanPausedUntil = now() + pause;
 			}
