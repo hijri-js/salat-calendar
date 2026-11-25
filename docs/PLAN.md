@@ -603,9 +603,9 @@ salat-calendar/
 │  │  ├─ [locale]/{layout.tsx, page.tsx, privacy/page.tsx, terms/page.tsx}
 │  │  └─ api/{prayers/preview, calendar/sync-month, calendar/cleanup}/route.ts
 │  ├─ features/
-│  │  ├─ wizard/        Stepper, Wizard shell, configStore.ts, savedSettings.ts, validity rules
+│  │  ├─ wizard/        Stepper, Wizard shell, GetIt, LanguageSwitcher, steps.ts, configStore.ts, savedSettings.ts
 │  │  ├─ location/      StepPlace, geocoding.ts, useCitySearch.ts, useGeolocation.ts, methods.ts
-│  │  ├─ rules/         StepPrayers, StepTiming, StepCalendar
+│  │  ├─ rules/         StepPrayers, StepTiming, StepCalendar, NumberField, NavButtons, colors.ts
 │  │  ├─ preview/       StepPreview, WeekGrid, MiniPreview, usePreview.ts
 │  │  ├─ ics-export/    ics.ts, icsFile.ts, useIcsDownload.ts, DownloadCard
 │  │  ├─ google-sync/   googleAuth.ts (token popup), useYearSync.ts, SyncCard,
