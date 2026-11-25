@@ -603,11 +603,11 @@ salat-calendar/
 │  │  ├─ [locale]/{layout.tsx, page.tsx, privacy/page.tsx, terms/page.tsx}
 │  │  └─ api/{prayers/preview, calendar/sync-month, calendar/cleanup}/route.ts
 │  ├─ features/
-│  │  ├─ wizard/        Stepper, Wizard shell, configStore.ts, validity rules
+│  │  ├─ wizard/        Stepper, Wizard shell, configStore.ts, savedSettings.ts, validity rules
 │  │  ├─ location/      StepPlace, geocoding.ts, useCitySearch.ts, useGeolocation.ts, methods.ts
 │  │  ├─ rules/         StepPrayers, StepTiming, StepCalendar
 │  │  ├─ preview/       StepPreview, WeekGrid, MiniPreview, usePreview.ts
-│  │  ├─ ics-export/    ics.ts, useIcsDownload.ts, DownloadCard
+│  │  ├─ ics-export/    ics.ts, icsFile.ts, useIcsDownload.ts, DownloadCard
 │  │  ├─ google-sync/   googleAuth.ts (token popup), useYearSync.ts, SyncCard,
 │  │  │                 server/{client, batch, calendars, ooo, reconcile}.ts
 │  │  └─ cleanup/       useCleanup.ts, CleanupButton, server/cleanup.ts
@@ -633,13 +633,13 @@ Each feature folder keeps its tests in its own `__tests__/`. An ESLint rule bloc
 
 | When                       | What                                                                                                       | Status                                                                                        |
 | -------------------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| Before approving           | Read the decisions and assumptions in section 2; say if any is wrong                                       | Yours to do                                                                                   |
+| Before approving           | Read the decisions and assumptions in section 2; say if any is wrong                                       | Done (plan approved)                                                                          |
 | Before PR 1                | GitHub login that can create repos in `hijri-js`; Node, pnpm, git                                          | Done: logged in as org admin with `repo` + `workflow` scopes; Node 24.15, pnpm 12.6, git 2.53 |
 | Before PR 1                | Matt Pocock skills                                                                                         | Done (installed by you). `/setup-matt-pocock-skills` is run once after the repo exists        |
-| Right after PR 1 is opened | `GITLEAKS_LICENSE` secret (8.2). Until it is added, the Gitleaks job fails and the other CI job still runs | To do                                                                                         |
-| Before PR 5 (optional)     | Impeccable and frontend-design (8.5)                                                                       | To do if you want them                                                                        |
+| Right after PR 1 is opened | `GITLEAKS_LICENSE` secret (8.2). Until it is added, the Gitleaks job fails and the other CI job still runs | Done (the `security` job passes)                                                              |
+| Before PR 5 (optional)     | Impeccable and frontend-design (8.5)                                                                       | Done (used for the PR 5 restyle)                                                              |
 | After PR 9 (optional)      | Google verification, needs your own domain (8.4)                                                           | To do when you want public sign-in                                                            |
-| Before PR 7                | Google client ID in `.env.local` (8.1)                                                                     | To do                                                                                         |
+| Before PR 7                | Google client ID in `.env.local` (8.1)                                                                     | Done                                                                                          |
 | PR 9                       | Cloudflare account and `wrangler login` (8.3)                                                              | To do                                                                                         |
 
 Nothing in this table blocks approving the plan.
@@ -801,8 +801,9 @@ flowchart LR
 ### PR 6: `.ics` download
 
 - `ics.ts` (pure, tested: line folding, escaping, UTC conversion across DST, fixed UIDs), download card.
-- **Code done; manual import check pending:** `ics.ts` (PR 18); the download in PR 6: `icsFile.ts` (rolling-year window, month chunks, file name, engine → file; tested), `useIcsDownload.ts` (one cached preview request per month, so each stays inside the Worker limits and shows progress), `DownloadCard` on the Get it step.
+- **Done:** `ics.ts` (PR 18); the download in PR 6: `icsFile.ts` (rolling-year window, month chunks, file name, engine → file; tested), `useIcsDownload.ts` (one cached preview request per month, so each stays inside the Worker limits and shows progress), `DownloadCard` on the Get it step.
 - **Check:** import the file into Google Calendar and one other app; times match the preview on a DST-change week.
+- **Import check, done by the owner (2026-11-20):** Google imported into the main calendar (it ignores the file's calendar name) and the file held all five prayers after the settings reset. Fixed in PR 6.2 (#22: import steps, "In the file: …"), 6.3 (#23: settings saved in the browser), 6.4/6.5 (#24, #25: real adhan times, events at the adhan by default) and 6.6 (#26: Prayers table, colour swatches).
 - **PR 6.1 follow-up:** a day-based progress bar with a percentage on the download card; the server pauses AlAdhan for 30 s after a timeout or 5xx (not only after a 429), so an outage costs one 10 s wait instead of one per month; the file gains `METHOD:PUBLISH` and a growing `SEQUENCE`, so apps that match by UID update events on re-import.
 
 ### PR 7: Google connect and sync

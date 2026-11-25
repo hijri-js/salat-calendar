@@ -65,6 +65,8 @@ flowchart TD
     F --> E[Safety: cleanup, tagged events, token in memory]
 ```
 
+Status as of 2026-11-25: PR 3 to PR 6 have shipped; PR 7 to PR 9 are planned. Defaults put every event exactly at the adhan; any shift is the user's choice.
+
 | Feature | Slice | Notes |
 | --- | --- | --- |
 | City search with timezone (Open-Meteo) and GPS detect | PR 5 | Type-ahead allowed by Open-Meteo policy; Nominatim rejected by the plan |

@@ -51,7 +51,15 @@ flowchart LR
 - The `prayer-engine` is a set of pure functions, shared by the browser (preview, `.ics`) and the server (Google sync). The server never trusts client times.
 - Google sync writes month by month, paced by your browser. Every event is tagged `app=salat-calendar`, so re-syncing is safe and "Remove all" touches only our events.
 - The Google access token lives in browser memory for the open tab only. It is never stored — no cookies, no `localStorage`, no server, no logs, no refresh token.
-- No database. Your rules stay in your browser. Event ownership lives on the event tags.
+- No database. Your rules are saved in your own browser (`localStorage`, settings only; "Reset to defaults" clears them). Event ownership lives on the event tags.
+
+## Status
+
+| Works today | Coming next |
+| --- | --- |
+| Six-step wizard in English and Arabic, city search and GPS, live preview with real adhan times, settings saved in the browser, `.ics` download for a rolling year | Google sign-in and sync (PR 7), one-click removal (PR 8), privacy pages and Cloudflare deploy (PR 9) |
+
+By default every event starts exactly at the adhan; offsets, rounding and a fixed Friday time are opt-in.
 
 ## Setup
 
@@ -71,7 +79,7 @@ cp .env.example .env.local
 pnpm dev
 ```
 
-The wizard and the live preview work without any Google setup. The `.ics` builder exists and is tested; the download button arrives in a later PR. The Google sync additionally needs a client ID (next section).
+The wizard, the live preview and the `.ics` download work without any Google setup. The Google sync (in progress, PR 7) additionally needs a client ID (next section).
 
 ### Google client ID (only needed for the sync)
 
@@ -88,7 +96,7 @@ NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
 
 **Why there is no client secret.** Sign-in uses the Google Identity Services token popup. The browser gets an access token directly from Google; our server only forwards it per request and forgets it. No secret is ever exchanged, so there is none to save or leak. The client ID is public by design — it ships in the page.
 
-Until Google verifies the app, sign-in is limited to the test users you listed (100 users in total for an unverified app). The preview works for everyone, and so will the `.ics` download once its button lands.
+Until Google verifies the app, sign-in is limited to the test users you listed (100 users in total for an unverified app). The preview and the `.ics` download work for everyone.
 
 ## Development
 
@@ -103,7 +111,7 @@ TypeScript is strict. Routes live under `src/app/` (routing only). Feature code 
 
 ## Tests
 
-Tests use Vitest. `src/lib/prayer-engine/` holds pure functions only — no I/O, no framework imports — and CI enforces a **100% coverage gate** (lines, branches, and functions) on that folder (a placeholder exercises the gate until the engine lands). The convention for the rest of the codebase: fixtures and unit tests where it matters — cache behaviour, reconcile logic, chunk maths, and route validation.
+Tests use Vitest. `src/lib/prayer-engine/` holds pure functions only — no I/O, no framework imports — and CI enforces a **100% coverage gate** (lines, branches, and functions) on that folder. The convention for the rest of the codebase: fixtures and unit tests where it matters — cache behaviour, reconcile logic, chunk maths, and route validation.
 
 ```bash
 pnpm test
