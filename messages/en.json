@@ -189,23 +189,6 @@
 		"comingSoon": "Coming soon",
 		"syncSoon": "Google sync arrives in a later release."
 	},
-	"methods": {
-		"1": "University of Islamic Sciences, Karachi",
-		"2": "Islamic Society of North America",
-		"3": "Muslim World League",
-		"4": "Umm al-Qura, Makkah",
-		"5": "Egyptian General Authority of Survey",
-		"7": "Institute of Geophysics, University of Tehran",
-		"8": "Gulf Region",
-		"9": "Kuwait",
-		"10": "Qatar",
-		"11": "Majlis Ugama Islam Singapura, Singapore",
-		"12": "Union Organization Islamic de France",
-		"13": "Diyanet İşleri, Turkey",
-		"14": "Spiritual Administration of Muslims of Russia",
-		"15": "Moonsighting Committee Worldwide",
-		"16": "Dubai (UAE)"
-	},
 	"notFound": {
 		"title": "Page not found",
 		"body": "The page you are looking for does not exist."

@@ -229,6 +229,6 @@ These six items come straight from the plan section 2 backlog row. None blocks v
 
 ## Status of this file
 
-- v1 epics E1 to E7: not started. E1 and the wizard shell can start after PR 1 merges, per the plan section 10 subagent note; E2 to E7 follow the order above.
-- Deferred D1 to D6: not scheduled. D3, D4, and D6 each need an owner decision before any code, because the plan rules out the storage they seem to need.
+- v1 epics (as of 2026-11-25): **E1 to E4 done** (PR 3 to PR 6, plus follow-ups #21 to #26). **E5 to E7 not started**; E5 (Google sync) is next.
+- Deferred D1 to D6: not scheduled, except D2's first half (settings saved in the browser), done in #23. D3, D4, and D6 each need an owner decision before any code, because the plan rules out the storage they seem to need.
 - Per the issue-tracker convention, each story becomes an issue file under .scratch/<feature>/ with a Status line when work starts.
